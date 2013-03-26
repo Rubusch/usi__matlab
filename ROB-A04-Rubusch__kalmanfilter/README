@@ -1,0 +1,68 @@
+ASSIGNMENT04 - Robotics
+Lothar Rubusch
+2013-Mar-20
+
+The script was developed using:
+  Octave 3.6.2
+  Debian Wheezy (x86)
+
+The work is in:
+  assignment.m
+
+It should perform all necessary calculations at one step, and prints out several graphs.
+Please find also attached several screenshots.
+
+
+Observations
+
+3)
+Both methods show an optimization of the raw data to the sensed data. The Kalman
+Filter results seem to look nicer.
+Their deviation of the Kalman Filter seems to be less, it has smoother curves.
+The higher the window size for the Moving Average Filter, also the smoother the
+curve can be, but on the other hand it does not reduce the deviation, thus also
+the higher the inertia to react on aprupt changes for the Moving Average Filter.
+To come up with better statements on that, the variants help to reveal the
+quality in smoothing.
+
+4)
+Although comparing a Variance of all Moving Average Filter measurings with
+different window sizes seem to be much smoother, there is a tradeoff resulting
+in a higher deviation. This is even visible in very smoothed curves having
+larger distances to the trend - a certain inertia in reaction, so to speak.
+The higher the window size the higher also the deviation.
+It is remarkable, though, the tremendous gain in variance reduction by the
+Kalman Filter in comparison to any of the Moving Average Models.
+
+See the plotted graphs of Variances and comparison for more details. It underpins
+the statement about the gain in reducing the variance by the Kalman Filter in
+comparison to the Moving Average Filter.
+
+---
+
+Just for interest, I tried to compare the Moving Average Filter with a self
+constructed Moving Median filter. From my personal experience in statistics
+especially working with not necessarily gaussian distributed data, a Mean
+sometimes gives more robust results, i.e. in cases where a distribution may
+show two peaks and not one. In such case a mean averages to a value in the
+middle, but actually only few measurements are actually showing this value.
+To the opinion of the author such situations happen also in the current
+case, at least when sudden changes appear. The median in such cases may give
+more robust results, since it will return results that actually are closer
+to the measured data. Although the results are not at all comparable with
+the outstanding work of a Kalman Filter, it is remarkable that at least in
+my calculation the median provides even here better results than the moving
+average mean, in terms of variance or deviation, respectively. Interesting
+in this context may having a look also on the mode instead of median, even
+that both will probably free of practical usage. Figure 5 may though
+contain still some interesting information on certain behavior of the both
+in special situations of the recorded movement data (e.g. groupings and
+correlation to each other and where it is less).
+
+I am aware that it was not asked and doesn't give answer on any of the
+questions of the assignment.
+
+Best regards,
+Lothar Rubusch
+
+

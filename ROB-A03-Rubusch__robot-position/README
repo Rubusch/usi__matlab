@@ -1,0 +1,20 @@
+ASSIGNMENT03 - Robotics
+
+The script was developed under:
+  Octave 3.6.2
+  Debian Wheezy (x86)
+
+Find the work in the following file:
+ setup.m
+
+Start the script as follows:
+ octave
+ > setup
+
+ wait...
+
+
+Screenshots attached.
+
+Best regards,
+Lothar Rubusch
