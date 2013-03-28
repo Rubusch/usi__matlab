@@ -42,69 +42,11 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, sees_door, mo
   p_notsee = 1-p_notsee_err;  % P( don't see door | no door )
 
   % models
-  P_sensor = zeros( lenght( prior_worldmap ) );
+  P_sensor = zeros( length( prior_worldmap ) );
   P_motion = zeros( length( prior_worldmap ) );
   P_prior = prior_worldmap;
 
 
-  for col = 1:length( prior_worldmap )
-    %% motion model
-
-    % get correct moving index
-    if 0 < moves
-      col_ng = mv_left( moves, col, length( prior_worldmap ) );
-    else if 0 > moves
-      col_ng = mv_right( abs(moves), col, length( prior_worldmap ) );
-    else
-      col_ng = col;
-    end
-    % take old map, take P( col+move )
-    P_motion(col) = prior_worldmap( col_ng );
-
-
-
-    %% sensor model
-
-    if 1 == prior_worldmap(1, col)
-      % map shows a door, and...
-      if 1 == sees_door
-        % ...a door sensed
-        P_sensor(col) = p_see;
-      else
-        % ...no door sensed but measure incorrect
-        P_sensor(col) = p_notsee_err;
-      end
-    else
-      % map has NO door, and...
-      if 1 == sees_door
-        % ...no door sensed
-        P_sensor(col) = p_see_err;
-      else
-        % ...a door sensed, but incorrect
-        P_sensor(col) = p_notsee;
-      end
-    end
-  end
-
-  % prediction - sum of motion model(k) times prior(k)
-  prediction = 0;
-  for col = 1:length( prior_worldmap )
-    prediction += P_motion( col ) * P_prior( col );
-  end
-
-
-  % normalization
-  nu = 0;
-  for col = 1:length( prior_worldmap )
-    nu += P_sensor( col ) * P_motion( col );
-  end
-  nu = 1/nu;
-
-
-  % formula
-  for col = 1:length( prior_worldmap )
-    posterior_worldmap(2, col) = nu * P_sensor(col) *  prediction;
-  end
 
 
 %% algorithm
