@@ -23,10 +23,12 @@ function [sense] = sensing( robot, worldmap )
   sense = worldmap( 1 + robot );
 endfunction
 
+
+
 % discrete bayes localization
-function [posterior_worldmap] = bayeslocalization( prior_worldmap, is_sensing, moves )
+function [posterior_worldmap] = bayeslocalization( prior_worldmap, sees_door, moves )
   posterior_worldmap = prior_worldmap;
-%  for row=1:2
+
     % reset
   n_door = sum( prior_worldmap(1,:));
   n_nodoor = length( prior_worldmap ) - n_door;
@@ -55,7 +57,7 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, is_sensing, m
       col_ng = mv_right( abs(moves), col, length( prior_worldmap ) );
     else
       col_ng = col;
-    endif
+    end
     % take old map, take P( col+move )
     P_motion(col) = prior_worldmap( col_ng );
 
@@ -65,7 +67,7 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, is_sensing, m
 
     if 1 == prior_worldmap(1, col)
       % map shows a door, and...
-      if 1 == is_sensing
+      if 1 == sees_door
         % ...a door sensed
         P_sensor(col) = p_see;
       else
@@ -74,42 +76,39 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, is_sensing, m
       end
     else
       % map has NO door, and...
-      if 1 == is_sensing
+      if 1 == sees_door
         % ...no door sensed
         P_sensor(col) = p_see_err;
       else
         % ...a door sensed, but incorrect
         P_sensor(col) = p_notsee;
       end
-    endif
-  endfor
-
+    end
+  end
 
   % prediction - sum of motion model(k) times prior(k)
   prediction = 0;
   for col = 1:length( prior_worldmap )
     prediction += P_motion( col ) * P_prior( col );
-  endfor
+  end
 
 
   % normalization
   nu = 0;
   for col = 1:length( prior_worldmap )
     nu += P_sensor( col ) * P_motion( col );
-  endfor
+  end
   nu = 1/nu;
 
 
   % formula
   for col = 1:length( prior_worldmap )
     posterior_worldmap(2, col) = nu * P_sensor(col) *  prediction;
-  endfor
+  end
 
 
-
-
-%  endfor
-  
+%% algorithm
+%
 % for k=1; k<N do
 %     p_hat(k,t) = 0;
 %     for i=1; i<N do
@@ -117,20 +116,17 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, is_sensing, m
 %     endfor
 %     p(k,t) = p(y(t) | X(t) = x(k)) p_hat(k,t) % sensor model
 % endfor
-
+%
 % nu = 0;
 % for k=1; k<N do
 %     nu=nu+p(k,t) % calculate normalization factor
 % endfor
-
+%
 % for k=1; k<N do
 %     p(k,t) = inv( nu ) p(k,t) % normalize
 % endfor
-
+%
 % return p(k,t);
-  
-
-% TODO
 endfunction
 
 
@@ -168,8 +164,13 @@ robot_sensing = -1;
 
 
 robot_sensing = sensing( robot, worldmap )
-worldmap = bayeslocalization( worldmap, robot_sensing );
+worldmap = bayeslocalization( worldmap, robot_sensing, 0 );
+worldmap
+
+return;
 % TODO filter
+
+
 
 robot = mv_left( robot, worldsize);
 robot = mv_left( robot, worldsize);
