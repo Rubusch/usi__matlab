@@ -39,11 +39,14 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, isdoorsensed 
   p_notsee_err = 0.4;         % P( don't see door | door )
   p_notsee = 1-p_notsee_err;  % P( don't see door | no door )
 
-  p_sense = 0;
+  p_sense = 0; 
+  p_moving = +1; 
   for col = 1:length( prior_worldmap )
     posterior_worldmap(1,col) = prior_worldmap(1, col);
 
-% TODO take sensing into account: door
+% TODO sensing
+% TODO movement
+
     if 1 == prior_worldmap(1, col)
       %% map has a door
       if 1 == isdoorsensed
@@ -55,12 +58,11 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, isdoorsensed 
 
 %          posterior_worldmap(2,col) = 1 / n_door * p_door * p_see / (p_door * p_see + p_nodoor * p_notsee_err);
       % may sum up to more than 1
-      posterior_worldmap(2,col) = 1 / n_door   * p_door    * p_see      * p_sense;
+      posterior_worldmap(2,col) = 1 / n_door   * p_door    * p_see      * (p_sense * p_moving);
 
       
     else
       %% map has NO door
-
       if 1 == isdoorsensed
 % TODO check this
         p_sense = p_see_err;
@@ -69,7 +71,7 @@ function [posterior_worldmap] = bayeslocalization( prior_worldmap, isdoorsensed 
       end
 %          posterior_worldmap(2,col) = 1 / n_nodoor *  p_nodoor * p_notsee / (p_nodoor * p_notsee + p_door * p_see_err);
       % may sum up to more than 1
-      posterior_worldmap(2,col) = 1 / n_nodoor *  p_nodoor * p_notsee   * p_sense;
+      posterior_worldmap(2,col) = 1 / n_nodoor *  p_nodoor * p_notsee   * (p_sense * p_moving);
     endif
   endfor
 
@@ -135,7 +137,7 @@ robot_sensing = -1;
 
 
 robot_sensing = sensing( robot, worldmap )
-worldmap = bayeslocalization( worldmap );
+worldmap = bayeslocalization( worldmap, robot_sensing );
 % TODO filter
 
 robot = mv_left( robot, worldsize);
