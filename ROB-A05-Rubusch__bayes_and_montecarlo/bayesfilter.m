@@ -29,23 +29,14 @@ endfunction
 
 % discrete bayes localization
 function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landmark, moves )
-
-%  printf("### INPUT ###########################################################\n");
-%  worldmap
-%  P_prior
-%  sees_landmark
-%  moves
-%  printf("#####################################################################\n");
-
-
+  % init
   worldsize = length( worldmap );
-
-  % reset
-  n_landmark = sum( worldmap );
-  n_nolandmark = worldsize - n_landmark;
+  P_sensor = zeros( 1, worldsize );
+  P_motion = zeros( 1, worldsize );
+  prediction = zeros(1,worldsize);
 
   % probabilities, map
-  p_landmark = n_landmark / n_nolandmark;
+  p_landmark = sum( worldmap ) / worldsize;
   p_nolandmark = 1 - p_landmark;
 
   % probabilities, sensor
@@ -53,11 +44,6 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
   p_see_err = 1-p_see;        % P( don't see landmark | landmark )
   p_notsee_err = 0.4;         % P( see landmark       | no landmark )
   p_notsee = 1-p_notsee_err;  % P( don't see landmark | no landmark )
-
-  % models
-  P_sensor = zeros( 1, worldsize );
-  P_motion = zeros( 1, worldsize );
-  prediction = zeros(1,worldsize);
 
 
         
