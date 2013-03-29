@@ -11,12 +11,12 @@ close all;
 %
 function [new_robot] = mv_left( steps, robot, worldsize )
   % move left in circle
-  new_robot = mod( robot+1, worldsize );
+  new_robot = 1 + mod( robot+1, worldsize );
 endfunction
 
 function [new_robot] = mv_right( steps, robot, worldsize )
   % move right in circle, add 10 and modulo for 0->9
-  new_robot = mod( (10 + (robot-1)), worldsize );
+  new_robot = 1 + mod( (10 + (robot-1)), worldsize );
 endfunction
 
 function [sense] = sensing( robot, worldmap )
@@ -26,6 +26,14 @@ endfunction
 
 % discrete bayes localization
 function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door, moves )
+
+  printf("### INPUT ###########################################################\n");
+  worldmap
+  P_prior
+  sees_door
+  moves
+  printf("#####################################################################\n");
+
   worldsize = length( worldmap );
 
   % reset
@@ -43,8 +51,8 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
   p_notsee = 1-p_notsee_err;  % P( don't see door | no door )
 
   % models
-  P_sensor = zeros( 1, worldsize )
-  P_motion = zeros( 1, worldsize )
+  P_sensor = zeros( 1, worldsize );
+  P_motion = zeros( 1, worldsize );
 
   prediction = zeros(1,worldsize);
   for k=1:worldsize
@@ -52,13 +60,13 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
       %% motion model
       % get correct moving index
       i_ng = -1;
-%      if 0 < moves
-%        i_ng = mv_left( moves, i, worldsize );
-%      elseif 0 > moves
-%        i_ng = mv_right( abs(moves), i, worldsize );
-%      else
+      if 0 < moves
+        i_ng = mv_left( moves, i, worldsize );
+      elseif 0 > moves
+        i_ng = mv_right( abs(moves), i, worldsize );
+      else
         i_ng = i;
-%      end
+      end
       % take old map, take P( i + move )
       P_motion(i) = worldmap( i_ng );
       prediction(k) += P_motion(i) * P_prior(i);
@@ -70,24 +78,24 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
       % map shows a door, and...
       if 1 == sees_door
         % ...a door sensed
-        P_sensor(k) = p_see;
+        P_sensor(k) = p_see * p_door;
       else
         % ...no door sensed but measure incorrect
-        P_sensor(k) = p_notsee_err;
+        P_sensor(k) = p_notsee_err * p_door;
       end
     else
       % map has NO door, and...
       if 1 == sees_door
         % ...no door sensed
-        P_sensor(k) = p_see_err;
+        P_sensor(k) = p_see_err * p_nodoor;
       else
         % ...a door sensed, but incorrect
-        P_sensor(k) = p_notsee;
+        P_sensor(k) = p_notsee * p_nodoor;
       end
     end
     prediction(k) = P_sensor(k) * prediction(k);
   end
-    
+
 
   % prediction - sum of motion model(k) times prior(k)
 %  prediction = 0;
@@ -177,7 +185,9 @@ worldsize = length( worldmap );
 
 % robot position in world, unknown to the robot!
 %robot = mod(abs(int8(randn * 100)), worldsize)
-robot = 3;
+
+robot = 3; % starting with 0!!!
+printf("DEBUG: robot on position %d\n", robot+1);
 robot_sensing = -1;
 
 % 1st iteration
@@ -201,7 +211,7 @@ probability
 moves = 3;
 robot = mv_left( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-probability = sensing( worldmap, probability, robot_sensing, moves );
+probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
 % door or wall?
 printf("2. robot sees a ");
 if 1 == sensing( robot, worldmap )
@@ -212,13 +222,14 @@ end
 probability
 
 
-return;       
+%return;       
 
 
 % 3eme iteration
 moves = 4;
 robot = mv_left( moves, robot, worldsize);
-probability = sensing( worldmap, probability, robot_sensing, moves );
+robot_sensing = sensing( robot, worldmap );
+probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
 % door or wall?
 printf("3. robot sees a ");
 if 1 == sensing( robot, worldmap )
