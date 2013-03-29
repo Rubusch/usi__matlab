@@ -24,7 +24,7 @@ function [new_robot] = mv_right( steps, robot, worldsize )
 endfunction
 
 function [sense] = sensing( robot, worldmap )
-  sense = worldmap( 1 + robot );
+  sense = worldmap( robot );
 endfunction
 
 
@@ -193,38 +193,48 @@ moves = 0;
 %robot = mod(abs(int8(randn * 100)), worldsize)
 
 printf("########################################################################\n");
-printf("DEBUG: robot on position %d\n", robot+1);
+printf("DEBUG: robot on position %d\n", robot);
 
 
 
                
-printf("\n");
-pos = mv_left( 1, robot, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-pos = mv_left( 1, pos, worldsize )
-               
-printf("\n");
-pos = mv_right( 1, robot, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-pos = mv_right( 1, pos, worldsize )
-printf("\n");
+%printf("\n");
+%pos = mv_left( 1, robot, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%pos = mv_left( 1, pos, worldsize )
+%               
+%printf("\n");
+%pos = mv_right( 1, robot, worldsize )
+%sensing( robot, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%pos = mv_right( 1, pos, worldsize )
+%sensing( pos, worldmap )
+%printf("\n");
 
 return;        
-
+%
 
 % 1st iteration
 robot_sensing = sensing( robot, worldmap );
@@ -239,7 +249,7 @@ end
 probability
 
 
-%return;      
+return;      
 
 
 % 2eme iteration
