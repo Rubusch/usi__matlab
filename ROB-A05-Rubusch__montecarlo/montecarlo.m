@@ -106,12 +106,14 @@ endfunction
 %endfunction
 
 
-function [P_posterior] = particlefilter( worldmap, P_prior, measurement, movements )
+function [P_posterior] = particlefilter( worldmap, P_prior, measurement, moves )
   % init
   worldsize = length( worldmap );
+% TODO sample(x(i) ; omega(i))
+  samples = [ P_prior ; randn(1, worldsize) ];  
+
+  % weighting factor
   omega = zeros( 1, worldsize );
-%  P_motion = zeros( 1, worldsize );
-%  prediction = zeros(1,worldsize);
 
   % probabilities, sensor
   p_see = 0.8;                % P( see landmark       | landmark )
@@ -156,10 +158,24 @@ function [P_posterior] = particlefilter( worldmap, P_prior, measurement, movemen
 
     %% normalize
     for j=1:worldsize
-      omega(j) *= 1/nu
+      omega(j) *= 1/nu;
     endfor % j
 
-    %% resample
+    %% resampling
+% TODO check
+    jitter = randn(1,worldsize);  
+    c = omega(0);
+    u = zeros(1, worldsize);  
+    i_next = i;  
+    for j=1:worldsize
+      u(i) = jitter + j*1/worldsize;
+      while u(i) > c
+        i_next++;
+        c += omega(i);
+      endwhile
+      samples_next = union( samples, x(i) );
+    endfor
+
 % TODO
   endfor % i
 
