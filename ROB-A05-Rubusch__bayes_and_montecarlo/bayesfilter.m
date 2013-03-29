@@ -2,13 +2,11 @@
 % Lothar Rubusch
 % 2013-mar-25
 
-
+% cleanup
 close all;
 
 
-
-% test model of robot
-%
+% auxiliary movement function (for simulation)
 function [new_position] = move( steps, position, worldsize )
   if 0 == (new_position = mod( 11+ position + steps, worldsize+1 ))
     if 0 > steps
@@ -22,6 +20,8 @@ function [new_position] = move( steps, position, worldsize )
   endif
 endfunction
 
+
+% auxiliary sensor function (for simulation)
 function [sense] = sensing( robot, worldmap )
   sense = worldmap( robot );
 endfunction
@@ -79,39 +79,19 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
     prediction(k) = P_sensor(k) * prediction(k);
   end
 
-  % normalization
+  %% normalization factor
   nu = 0;
   for k = 1:worldsize
     nu += prediction( k );
   end
   nu = 1/nu;
 
-  % formula
+  %% normalization
   for k = 1:worldsize
     posterior_worldmap(k) = nu * prediction(k);
   end
 endfunction
 
-
-function particle_filter()
-% for i=1; i<k do % normally done online
-%     for j=1; j<N do % for all particles
-%         compute a new state x by sampling according to P(x|u(i-1,x(j)));
-%         x_hat(j) = x;
-%     endfor
-%     nu = 0;
-%     for j=1; j<N do % for all particles
-%         omega(j) = P(y(i)|x(j)); % sensor model
-%         nu = nu + omega(j) % calculate normalization factor
-%     endfor
-%     for j=1; j<N do % for all particles
-%         omega(j) = inv(nu) * omega(j); % normalize
-%     endfor
-%     M = resampling(M);
-% endfor
-
-% TODO
-endfunction
 
 function report( idx, moves, sensing, probability )
   printf("%d. robot moved %d and senses ", idx, moves);
@@ -136,7 +116,8 @@ worldsize = length( worldmap );
 robot = 1;
 robot_sensing = -1;
 moves = 0;
-% robot position in world, unknown to the robot!
+
+% test robot with random position in world
 %robot = mod(abs(int8(randn * 100)), worldsize)
 
 printf("########################################################################\n");
@@ -145,7 +126,6 @@ printf("DEBUG: robot on position %d\n", robot);
 
 % print world
 [ 0:9; worldmap ]
-
 
 
 % 1st iteration
@@ -162,9 +142,6 @@ title( "Localization with discrete Bayes Filter" );
 plot(0:9, probability, "c*;1st result;");
 
 
-%return;      
-
-
 % 2eme iteration
 moves = 3;
 robot = move( moves, robot, worldsize);
@@ -172,9 +149,6 @@ robot_sensing = sensing( robot, worldmap );
 probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
 report( 2, moves, robot_sensing, probability );
 plot(0:9, probability, "b*;2nd result;")
-
-
-%return;       
 
 
 % 3eme iteration
