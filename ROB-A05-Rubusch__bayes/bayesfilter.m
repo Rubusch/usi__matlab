@@ -35,10 +35,6 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
   P_motion = zeros( 1, worldsize );
   prediction = zeros(1,worldsize);
 
-  % probabilities, map
-  p_landmark = sum( worldmap ) / worldsize;
-  p_nolandmark = 1 - p_landmark;
-
   % probabilities, sensor
   p_see = 0.8;                % P( see landmark       | landmark )
   p_see_err = 1-p_see;        % P( don't see landmark | landmark )
@@ -61,19 +57,19 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
       % map shows a landmark, and...
       if 1 == sees_landmark
         % ...a landmark sensed
-        P_sensor(k) = p_see;% * p_landmark;
+        P_sensor(k) = p_see;
       else
         % ...no landmark sensed (incorrect)
-        P_sensor(k) = p_see_err;% * p_landmark;
+        P_sensor(k) = p_see_err;
       end
     else
       % map has NO landmark, and...
       if 1 != sees_landmark
         % ...no landmark sensed
-        P_sensor(k) = p_notsee;% * p_nolandmark;
+        P_sensor(k) = p_notsee;
       else
         % ...a landmark sensed (incorrect)
-        P_sensor(k) = p_notsee_err;% * p_nolandmark;
+        P_sensor(k) = p_notsee_err;
       end
     end
     prediction(k) = P_sensor(k) * prediction(k);
@@ -142,7 +138,7 @@ title( "Localization with discrete Bayes Filter" );
 plot(0:9, probability, "c*;1st result;");
 
 
-% 2eme iteration
+% 2nd iteration
 moves = 3;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
@@ -151,14 +147,12 @@ report( 2, moves, robot_sensing, probability );
 plot(0:9, probability, "b*;2nd result;")
 
 
-% 3eme iteration
+% 3nd iteration
 moves = 4;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
 probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
 report( 3, moves, robot_sensing, probability );
-
-
 plot(0:9, probability, "r*;final result;")
 hold off;
 

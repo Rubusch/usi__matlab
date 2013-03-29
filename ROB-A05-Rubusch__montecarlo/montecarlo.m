@@ -2,13 +2,11 @@
 % Lothar Rubusch
 % 2013-mar-25
 
-
+% cleanup
 close all;
 
 
-
-% test model of robot
-%
+% movement (for simulation)
 function [new_position] = move( steps, position, worldsize )
   if 0 == (new_position = mod( 11+ position + steps, worldsize+1 ))
     if 0 > steps
@@ -22,8 +20,23 @@ function [new_position] = move( steps, position, worldsize )
   endif
 endfunction
 
+
+% sensing for simulation
 function [sense] = sensing( robot, worldmap )
   sense = worldmap( robot );
+endfunction
+
+
+% report
+function report( idx, moves, sensing, probability )
+  printf("%d. robot moved %d and senses ", idx, moves);
+  if 1 == sensing
+    printf("a LANDMARK\n");
+  else
+    printf("NOTHING\n");
+  end
+  printf("position - probability\n");
+  [ 0:9; probability]
 endfunction
 
 
@@ -93,7 +106,63 @@ endfunction
 %endfunction
 
 
-function particlefilter()
+function [P_posterior] = particlefilter( worldmap, P_prior, measurement, movements )
+  % init
+  worldsize = length( worldmap );
+  omega = zeros( 1, worldsize );
+%  P_motion = zeros( 1, worldsize );
+%  prediction = zeros(1,worldsize);
+
+  % probabilities, sensor
+  p_see = 0.8;                % P( see landmark       | landmark )
+  p_see_err = 1-p_see;        % P( don't see landmark | landmark )
+  p_notsee_err = 0.4;         % P( see landmark       | no landmark )
+  p_notsee = 1-p_notsee_err;  % P( don't see landmark | no landmark )
+
+
+
+  for i=1:worldsize
+    for j=1:worldsize
+      %% motion model
+% TODO
+      ;
+    endfor
+
+    nu = 0;
+    for j=1:worldsize
+      %% sensor model
+      if 1 == worldmap(j)
+        % map shows a landmark, and...
+        if 1 == measurement
+          % ...a landmark sensed
+          omega(j) = p_see;
+        else
+          % ...no landmark sensed (incorrect)
+          omega(j) = p_see_err;
+        endif
+      else
+        % map has NO landmark, and...
+        if 1 != measurement
+          % ...no landmark sensed
+          omega(j) = p_notsee;
+        else
+          % ...a landmark sensed (incorrect)
+          omega(j) = p_notsee_err;
+        endif
+      endif
+      %% calculate normalization factor
+      nu += omega(j);
+    endfor % j
+
+    %% normalize
+    for j=1:worldsize
+      omega(j) *= 1/nu
+    endfor % j
+
+    %% resample
+% TODO
+  endfor % i
+
 % for i=1; i<k do % normally done online
 %     for j=1; j<N do % for all particles
 %         compute a new state x by sampling according to P(x|u(i-1,x(j)));
@@ -113,17 +182,6 @@ function particlefilter()
 % TODO
 endfunction
 
-function report( idx, moves, sensing, probability )
-  printf("%d. robot moved %d and senses ", idx, moves);
-  if 1 == sensing
-    printf("a LANDMARK\n");
-  else
-    printf("NOTHING\n");
-  end
-  printf("position - probability\n");
-  [ 0:9; probability]
-endfunction
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,8 +197,10 @@ moves = 0;
 % robot position in world, unknown to the robot!
 %robot = mod(abs(int8(randn * 100)), worldsize)
 
+
 printf("########################################################################\n");
-printf("DEBUG: robot on position %d\n", robot);
+printf("robot on position %d\n", robot);
+
 
 % print world
 [ 0:9; worldmap ]
@@ -148,43 +208,41 @@ printf("DEBUG: robot on position %d\n", robot);
 
 % 1st iteration
 robot_sensing = sensing( robot, worldmap );
-probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
+probability = particlefilter( worldmap, probability, robot_sensing, moves );
 report( 1, moves, robot_sensing, probability );
-figure
-hold on;
-grid("minor");
-xlabel( "Positions [steps]" );
-xlim = 10;
-ylabel( "Probability [fraction of one]" );
-title( "Localization with discrete Bayes Filter" );
-plot(0:9, probability, "c*;1st result;");
+%figure
+%hold on;
+%grid("minor");
+%xlabel( "Positions [steps]" );
+%xlim = 10;
+%ylabel( "Probability [fraction of one]" );
+%title( "Localization with discrete Bayes Filter" );
+%plot(0:9, probability, "c*;1st result;");
 
 
-%return;      
+return;      
 
 
-% 2eme iteration
+% 2nd iteration
 moves = 3;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
-report( 2, moves, robot_sensing, probability );
-plot(0:9, probability, "b*;2nd result;")
+probability = particlefilter( worldmap, probability, robot_sensing, moves );
+%report( 2, moves, robot_sensing, probability );
+%plot(0:9, probability, "b*;2nd result;")
 
 
-%return;       
+return;       
 
 
-% 3eme iteration
+% 3rd iteration
 moves = 4;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
+probability = particlefilter( worldmap, probability, robot_sensing, moves );
 report( 3, moves, robot_sensing, probability );
-
-
-plot(0:9, probability, "r*;final result;")
-hold off;
+%plot(0:9, probability, "r*;final result;")
+%hold off;
 
 
 printf( "READY.\n" );
