@@ -61,7 +61,6 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
     % take old map, take P( col+move )
     P_motion(col) = worldmap( col_ng );
 
-
     %% sensor model
     if 1 == worldmap(col)
       % map shows a door, and...
@@ -93,16 +92,23 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
   % normalization
   nu = 0;
   for col = 1:worldsize
-%    nu += P_sensor( col ) * P_motion( col );  
-    nu += P_sensor( col ) * P_prior( col );
+    nu += P_sensor( col ) * prediction;
   end
   nu = 1/nu;
-
 
   % formula
   for col = 1:worldsize
     posterior_worldmap(col) = nu * P_sensor(col) *  prediction;
   end
+
+  printf("######################################################################\n");
+  P_motion                        
+  P_sensor                        
+  prediction                      
+  nu                              
+  sum( posterior_worldmap )       
+  printf("######################################################################\n");
+
 
 
 %% algorithm
@@ -159,7 +165,8 @@ probability = [ 1 1 1 1 1 1 1 1 1 1 ];
 worldsize = length( worldmap );
 
 % robot position in world, unknown to the robot!
-robot = mod(abs(int8(randn * 100)), worldsize)
+%robot = mod(abs(int8(randn * 100)), worldsize)
+robot = 3;
 robot_sensing = -1;
 
 % 1st iteration
@@ -175,6 +182,7 @@ else
 end
 probability
 
+%return;      
 
 % 2eme iteration
 moves = 3;
@@ -189,6 +197,8 @@ else
   printf("WALL\n");
 end
 probability
+
+return;       
 
 
 % 3eme iteration
