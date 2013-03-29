@@ -28,12 +28,12 @@ endfunction
 
 
 % discrete bayes localization
-function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door, moves )
+function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landmark, moves )
 
 %  printf("### INPUT ###########################################################\n");
 %  worldmap
 %  P_prior
-%  sees_door
+%  sees_landmark
 %  moves
 %  printf("#####################################################################\n");
 
@@ -41,18 +41,18 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
   worldsize = length( worldmap );
 
   % reset
-  n_door = sum( worldmap );
-  n_nodoor = worldsize - n_door;
+  n_landmark = sum( worldmap );
+  n_nolandmark = worldsize - n_landmark;
 
   % probabilities, map
-  p_door = n_door / n_nodoor;
-  p_nodoor = 1 - p_door;
+  p_landmark = n_landmark / n_nolandmark;
+  p_nolandmark = 1 - p_landmark;
 
   % probabilities, sensor
-  p_see = 0.8;                % P( see door       | door )
-  p_see_err = 1-p_see;        % P( don't see door | door )
-  p_notsee_err = 0.4;         % P( see door       | no door )
-  p_notsee = 1-p_notsee_err;  % P( don't see door | no door )
+  p_see = 0.8;                % P( see landmark       | landmark )
+  p_see_err = 1-p_see;        % P( don't see landmark | landmark )
+  p_notsee_err = 0.4;         % P( see landmark       | no landmark )
+  p_notsee = 1-p_notsee_err;  % P( don't see landmark | no landmark )
 
   % models
   P_sensor = zeros( 1, worldsize );
@@ -75,22 +75,22 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
 
     %% sensor model
     if 1 == worldmap(k)
-      % map shows a door, and...
-      if 1 == sees_door
-        % ...a door sensed
-        P_sensor(k) = p_see * p_door;
+      % map shows a landmark, and...
+      if 1 == sees_landmark
+        % ...a landmark sensed
+        P_sensor(k) = p_see * p_landmark;
       else
-        % ...no door sensed (incorrect)
-        P_sensor(k) = p_see_err * p_door;
+        % ...no landmark sensed (incorrect)
+        P_sensor(k) = p_see_err * p_landmark;
       end
     else
-      % map has NO door, and...
-      if 1 == sees_door
-        % ...no door sensed
-        P_sensor(k) = p_notsee * p_nodoor;
+      % map has NO landmark, and...
+      if 1 == sees_landmark
+        % ...no landmark sensed
+        P_sensor(k) = p_notsee * p_nolandmark;
       else
-        % ...a door sensed (incorrect)
-        P_sensor(k) = p_notsee_err * p_nodoor;
+        % ...a landmark sensed (incorrect)
+        P_sensor(k) = p_notsee_err * p_nolandmark;
       end
     end
     prediction(k) = P_sensor(k) * prediction(k);
@@ -162,11 +162,12 @@ endfunction
 function report( idx, moves, sensing, probability )
   printf("%d. robot moved %d and sees a ", idx, moves);
   if 1 == sensing
-    printf("DOOR\n");
+    printf("LANDMARK\n");
   else
     printf("WALL\n");
   end
-  probability
+  printf("position - probability\n");
+  [ 0:9; probability]
 endfunction
 
 
@@ -178,7 +179,7 @@ endfunction
 worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
 probability = [ 1 1 1 1 1 1 1 1 1 1 ];
 worldsize = length( worldmap );
-robot = 3;
+robot = 1;
 robot_sensing = -1;
 moves = 0;
 % robot position in world, unknown to the robot!
@@ -223,6 +224,8 @@ printf("DEBUG: robot on position %d\n", robot);
 %pos = move( -1, pos, worldsize )
 %sensing( pos, worldmap )
 %printf("\n");
+
+
 
 %return;        
 worldmap
