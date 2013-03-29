@@ -59,19 +59,35 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
   P_motion = zeros( 1, worldsize );
   prediction = zeros(1,worldsize);
 
+
+        
+%p_landmark
+%p_nolandmark
+%
+%p_see
+%p_see_err
+%p_notsee_err
+%p_notsee
+%printf("\n");
+%
+%p_see * p_landmark
+%p_see_err * p_landmark
+%p_notsee_err * p_nolandmark
+%p_notsee * p_nolandmark
+%
+%return;
+%        
+
+
   for k=1:worldsize
 
+    prediction(k) = 0;
+
+    %% motion model
     k_before = move( -moves, k, worldsize );
     for i=1:worldsize
-      %% motion model
-      % get correct moving index
-      i_ng = -1;
-%      i_ng = move( -moves, i, worldsize );
-      i_before = move( -moves, i, worldsize );
-%      prediction(k) += P_prior( i ) * P_prior(i_before);
       prediction(k) += P_prior( i ) * P_prior(k_before);
     end
-
 
     %% sensor model
     if 1 == worldmap(k)
@@ -85,7 +101,7 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
       end
     else
       % map has NO landmark, and...
-      if 1 == sees_landmark
+      if 1 != sees_landmark
         % ...no landmark sensed
         P_sensor(k) = p_notsee * p_nolandmark;
       else
@@ -108,11 +124,6 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_landm
   for k = 1:worldsize
     posterior_worldmap(k) = nu * prediction(k);
   end
-
-%  printf("######################################################################\n");
-%  [P_sensor; prediction]
-%  printf( "DB: sum of all probabilitys %f\n", sum(posterior_worldmap));
-%  printf("######################################################################\n");
 
 
 
