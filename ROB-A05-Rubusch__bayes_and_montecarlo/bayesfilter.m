@@ -10,13 +10,15 @@ close all;
 % test model of robot
 %
 function [new_robot] = mv_left( steps, robot, worldsize )
-  % move left in circle
-  new_robot = 1 + mod( robot+1, worldsize );
+  % move left in circle, increase the number
+  if 0 == (new_robot = mod( robot + steps, worldsize ))
+    new_robot = 1;
+  end
 endfunction
 
 function [new_robot] = mv_right( steps, robot, worldsize )
   % move right in circle, add 10 and modulo for 0->9
-  new_robot = 1 + mod( (10 + (robot-1)), worldsize );
+  new_robot = 1 + mod( (10 + (robot-steps)), worldsize );
 endfunction
 
 function [sense] = sensing( robot, worldmap )
@@ -178,20 +180,51 @@ endfunction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% START                                                                        
 
-%% simulation workd
+%% init
 worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
 probability = [ 1 1 1 1 1 1 1 1 1 1 ];
 worldsize = length( worldmap );
-
+robot = 3;
+robot_sensing = -1;
+moves = 0;
 % robot position in world, unknown to the robot!
 %robot = mod(abs(int8(randn * 100)), worldsize)
 
-robot = 3; % starting with 0!!!
+printf("########################################################################\n");
 printf("DEBUG: robot on position %d\n", robot+1);
-robot_sensing = -1;
+
+
+
+               
+printf("\n");
+pos = mv_left( 1, robot, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+pos = mv_left( 1, pos, worldsize )
+               
+printf("\n");
+pos = mv_right( 1, robot, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+pos = mv_right( 1, pos, worldsize )
+printf("\n");
+
+return;        
+
 
 % 1st iteration
-moves = 0;
 robot_sensing = sensing( robot, worldmap );
 probability = bayeslocalization( worldmap, probability, robot_sensing, moves );
 % door or wall?
