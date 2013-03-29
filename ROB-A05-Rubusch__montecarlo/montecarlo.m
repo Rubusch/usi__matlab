@@ -56,10 +56,11 @@ function [P_posterior] = particlefilter( worldmap, P_prior, measurement, moves )
 
 
 
-  for i=1:worldsize
+% TODO is this needed?
+%  for i=1:worldsize
     for j=1:worldsize
       %% motion model
-% TODO
+% TODO 
       ;
     endfor
 
@@ -97,20 +98,25 @@ function [P_posterior] = particlefilter( worldmap, P_prior, measurement, moves )
     %% resampling
 % TODO check
     jitter = randn(1,worldsize);  
-    c = omega(0);
+    c = omega(1);
     u = zeros(1, worldsize);  
-    i_next = i;  
+%    i_next = i;  
+    i_next = 0;  
     for j=1:worldsize
-      u(i) = jitter + j*1/worldsize;
-      while u(i) > c
-        i_next++;
-        c += omega(i);
+%      u(i) = jitter + j*1/worldsize;  
+      u = jitter + j*1/worldsize;  
+%      while u(i) > c  
+      while u > c  
+        i_next++;  
+%        c += omega(i);  
+        c += omega;  
       endwhile
-      samples_next = union( samples, x(i) );
+%      samples_next = union( samples, x(i) );  
+% TODO merge to samples_next
     endfor
 
 % TODO
-  endfor % i
+%  endfor % i
 
 % for i=1; i<k do % normally done online
 %     for j=1; j<N do % for all particles
