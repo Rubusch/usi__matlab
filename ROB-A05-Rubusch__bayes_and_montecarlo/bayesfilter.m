@@ -47,66 +47,116 @@ function [posterior_worldmap] = bayeslocalization( worldmap, P_prior, sees_door,
   P_sensor = zeros( 1, worldsize )
   P_motion = zeros( 1, worldsize )
 
-  for col=1:worldsize
-    %% motion model
-    % get correct moving index
-    col_ng = -1;
-    if 0 < moves
-      col_ng = mv_left( moves, col, worldsize );
-    elseif 0 > moves
-      col_ng = mv_right( abs(moves), col, worldsize );
-    else
-      col_ng = col;
+%  for k=1:worldsize
+%    %% motion model
+%    % get correct moving index
+%    k_ng = -1;
+%    if 0 < moves
+%      k_ng = mv_left( moves, k, worldsize );
+%    elseif 0 > moves
+%      k_ng = mv_right( abs(moves), k, worldsize );
+%    else
+%      k_ng = k;
+%    end
+%    % take old map, take P( k+move )
+%    P_motion(k) = worldmap( k_ng );
+%
+%    %% sensor model
+%    if 1 == worldmap(k)
+%      % map shows a door, and...
+%      if 1 == sees_door
+%        % ...a door sensed
+%        P_sensor(k) = p_see;
+%      else
+%        % ...no door sensed but measure incorrect
+%        P_sensor(k) = p_notsee_err;
+%      end
+%    else
+%      % map has NO door, and...
+%      if 1 == sees_door
+%        % ...no door sensed
+%        P_sensor(k) = p_see_err;
+%      else
+%        % ...a door sensed, but incorrect
+%        P_sensor(k) = p_notsee;
+%      end
+%    end
+%  end
+
+
+  
+  prediction = zeros(1,worldsize);
+  for k=1:worldsize
+    for i=1:worldsize
+      %% motion model
+      % get correct moving index
+      i_ng = -1;
+      if 0 < moves
+        i_ng = mv_left( moves, i, worldsize );
+      elseif 0 > moves
+        i_ng = mv_right( abs(moves), i, worldsize );
+      else
+        i_ng = i;
+      end
+      % take old map, take P( i + move )
+      P_motion(i) = worldmap( i_ng );
+      prediction(k) += P_motion(i) * P_prior(i);
     end
-    % take old map, take P( col+move )
-    P_motion(col) = worldmap( col_ng );
+
 
     %% sensor model
-    if 1 == worldmap(col)
+    if 1 == worldmap(k)
       % map shows a door, and...
       if 1 == sees_door
         % ...a door sensed
-        P_sensor(col) = p_see;
+        P_sensor(k) = p_see;
       else
         % ...no door sensed but measure incorrect
-        P_sensor(col) = p_notsee_err;
+        P_sensor(k) = p_notsee_err;
       end
     else
       % map has NO door, and...
       if 1 == sees_door
         % ...no door sensed
-        P_sensor(col) = p_see_err;
+        P_sensor(k) = p_see_err;
       else
         % ...a door sensed, but incorrect
-        P_sensor(col) = p_notsee;
+        P_sensor(k) = p_notsee;
       end
     end
+    prediction(k) = P_sensor(k) * prediction(k);
   end
+    
 
   % prediction - sum of motion model(k) times prior(k)
-  prediction = 0;
-  for col = 1:worldsize
-    prediction += P_motion(col) * P_prior(col);
-  end
+%  prediction = 0;
+%  prediction_arr = zeros(1,worldsize);;
+%  for col = 1:worldsize
+%    prediction += P_motion(col) * P_prior(col);
+%    prediction_arr(col) = P_motion(col) * P_prior(col);
+%  end
+%  prediction = sum( prediction_arr );  
+
+
 
   % normalization
   nu = 0;
-  for col = 1:worldsize
-    nu += P_sensor( col ) * prediction;
+  for k = 1:worldsize
+%    nu += P_sensor( col ) * prediction;
+    nu += prediction( k );
   end
   nu = 1/nu;
 
   % formula
-  for col = 1:worldsize
-    posterior_worldmap(col) = nu * P_sensor(col) *  prediction;
+  for k = 1:worldsize
+%    posterior_worldmap(col) = nu * P_sensor(col) *  prediction;
+    posterior_worldmap(k) = nu * P_sensor(k) * prediction(k);
   end
 
   printf("######################################################################\n");
-  P_motion                        
-  P_sensor                        
-  prediction                      
-  nu                              
-  sum( posterior_worldmap )       
+  [ P_motion ; P_sensor ; prediction ]                      
+%  [ prediction ; nu ; sum( posterior_worldmap ) ]      
+%  [ nu ; sum( posterior_worldmap ) ]      
   printf("######################################################################\n");
 
 
@@ -182,7 +232,9 @@ else
 end
 probability
 
+
 %return;      
+
 
 % 2eme iteration
 moves = 3;
@@ -197,6 +249,7 @@ else
   printf("WALL\n");
 end
 probability
+
 
 return;       
 
