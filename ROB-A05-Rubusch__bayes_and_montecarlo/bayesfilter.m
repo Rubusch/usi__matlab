@@ -11,14 +11,16 @@ close all;
 %
 function [new_robot] = mv_left( steps, robot, worldsize )
   % move left in circle, increase the number
-  if 0 == (new_robot = mod( robot + steps, worldsize ))
+  if 0 == (new_robot = mod( robot + steps, worldsize+1 ))
     new_robot = 1;
-  end
+  endif
 endfunction
 
 function [new_robot] = mv_right( steps, robot, worldsize )
   % move right in circle, add 10 and modulo for 0->9
-  new_robot = 1 + mod( (10 + (robot-steps)), worldsize );
+  if 0 == (new_robot = mod( (11 + (robot - steps)), worldsize+1 ))
+    new_robot = 10;
+  endif
 endfunction
 
 function [sense] = sensing( robot, worldmap )
