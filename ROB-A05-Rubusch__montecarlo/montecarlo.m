@@ -67,7 +67,10 @@ function n = w()
 endfunction
 
 % resampling
-function [particles] = re_sample(xp, pdf)
+function [particles] = resample(xp, pdf)
+% TODO idx???
+  idx=0;   
+
   cdf = cumsum( pdf ); % cumulative sum
   diff = cdf' * ones( 1, length(pdf) ) -  ones( length(pdf), 1) * rand( 1, length(pdf) );
   diff = (diff <= 0) * 2 + diff;
@@ -76,59 +79,61 @@ function [particles] = re_sample(xp, pdf)
 endfunction
 
 
+
+
 %% particle filter
-function [particles] = particlefilter( worldmap, P_prior, measurement, moves )
+%function [particles] = particlefilter( worldmap, P_prior, measurement, moves )
+function [particles_ng] = particlefilter( worldmap, particles, observation, moves )
   % init
   N = 100;    % num of particles
   T = 10;     % num of timesteps
-  x = 0.1;    % init state 
-  X = x;      % initial sequence of true states 
+  position_init = 0.1;    % init state 
+  position = position_init;      % initial sequence of true states 
   pCov = 2;   % initial covariance of particle distribution 
 
-  wCov=1;     % TODO  
+% TODO  
+  wCov=1;     
 
-% p
-  particles = x + sqrt( pCov ) * randn( length( x ), N ); % init particles
-  xp = zeros( length( x ), N ); % init state estimate
-  X_hat = []; % init sequence of state estimates
 
-% q
+
+  particles = position_init + sqrt( pCov ) * randn( length( position_init ), N ); % init particles
+  position_prediction = zeros( length(position_init), N ); % init state estimate
+  position_hat = []; % init sequence of state estimates
   particles_weight = zeros( 1, N ); % init particle weights
-
 
 
 
   for t = 1:T
     % nonlinear discrete time system with additive noise
-    x = f( x, v, t ); % true state at time t
-    y = h( x, w ); % observation at time t
+    position_init = f( position_init, v, t ); % true state at time t
+    observation = h( position_init, w ); % observation at time t
 
 
 
 
     % particle filtering
-    for i = 1:N
-      xp( i ) = f( particles( i ), v, t );  % particle prediction
-      yp( i ) = h( xp( i ), w ); % prediction measurement
+    for idx = 1:N
+      position_prediction( idx ) = f( particles( idx ), v, t );  % particle prediction
+      observation_predicted( idx ) = h( position_prediction( idx ), w ); % prediction measurement
 
 
 
-      d = y - yp;  % diff betw the pred measurement and observation
-      particles_weight( i ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); % asgn importance weight to each particle
+      d = observation - observation_predicted;  % diff betw the pred measurement and observation
+      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); % asgn importance weight to each particle
     endfor
     particles_weight = particles_weight./sum( particles_weight ); % normalize the likelihood of each a priori estimate
 
 
 
     % the state estimate is the weighted mean of the particles
-    x_hat = particles_weight * particles'; % weighted sum
-    X = [ X x ];
-    X_hat = [ X_hat x_hat ];     % update sequence of true states and state estimates
+    position_weighted_hat = particles_weight * particles'; % weighted sum
+    position = [ position position_init ];
+    position_hat = [ position_hat position_weighted_hat ];     % update sequence of true states and state estimates
 
 
 
 
-    particles = re_sample( xp, particles_weight ); % resampling
+    particles_ng = resample( position_prediction, particles_weight ); % resampling
   endfor
 
 
