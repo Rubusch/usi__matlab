@@ -84,8 +84,13 @@ endfunction
 %% particle filter
 %function [particles] = particlefilter( worldmap, P_prior, measurement, moves )
 function [particles_ng] = particlefilter( worldmap, particles, observation, moves )
+% TODO pass as parameter
+  N1 = 10; 
+  N2 = 100; 
+  N3 = 1000; 
+
   % init
-  N = 100;    % num of particles
+  N = N1;    % num of particles
   T = 10;     % num of timesteps
   position_init = 0.1;    % init state 
   position = position_init;      % initial sequence of true states 
