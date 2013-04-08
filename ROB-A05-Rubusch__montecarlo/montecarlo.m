@@ -43,24 +43,24 @@ endfunction
 %% aux functions
 
 % nonlinear state transition equation
-function [x] = f( x, v, t )
+function [x] = _state_transition( x, v, t )
   x = 0.5 * x  +  25 * x / (1 + x^2 )  +  8 * cos( 1.2 * (t-1))  +  v;
 endfunction
 
 % nonlinear measurement function
-function [y] = h( x, w )
+function [y] = _measurement( x, w )
   y = x^2/20 + w;
 endfunction
 
 % process noise
-function [n] = v()
+function [n] = process_noise()
   vMean = 0; % mean
   vCov  = 1; % covariance
   n = vMean + sqrt( vCov ) * randn;
 endfunction
 
 % measurement noise
-function n = w()
+function n = measurement_noise()
   wMean = 0; % mean
   wCov  = 1; % covariance
   n = wMean + sqrt( wCov ) * randn;
@@ -68,9 +68,6 @@ endfunction
 
 % resampling
 function [particles] = resample(xp, pdf)
-% TODO idx???
-  idx=0;   
-
   cdf = cumsum( pdf ); % cumulative sum
   diff = cdf' * ones( 1, length(pdf) ) -  ones( length(pdf), 1) * rand( 1, length(pdf) );
   diff = (diff <= 0) * 2 + diff;
@@ -90,11 +87,13 @@ function [particles_ng] = particlefilter( worldmap, particles, observation, move
   N3 = 1000; 
 
   % init
-  N = N1;    % num of particles
+  N = N1;     % num of particles
   T = 10;     % num of timesteps
   position_init = 0.1;    % init state 
   position = position_init;      % initial sequence of true states 
   pCov = 2;   % initial covariance of particle distribution 
+
+
 
 % TODO  
   wCov=1;     
@@ -107,24 +106,33 @@ function [particles_ng] = particlefilter( worldmap, particles, observation, move
   particles_weight = zeros( 1, N ); % init particle weights
 
 
+  particles_ng = particles; % initial set empty  
+
+
 
   for t = 1:T
     % nonlinear discrete time system with additive noise
-    position_init = f( position_init, v, t ); % true state at time t
-    observation = h( position_init, w ); % observation at time t
+    position_init = _state_transition( position_init, process_noise, t ); % true state at time t
+    observation = _measurement( position_init, measurement_noise ); % observation at time t
 
 
 
 
     % particle filtering
     for idx = 1:N
-      position_prediction( idx ) = f( particles( idx ), v, t );  % particle prediction
-      observation_predicted( idx ) = h( position_prediction( idx ), w ); % prediction measurement
+      position_prediction( idx ) = _state_transition( particles( idx ), v, t );  % particle prediction
+      observation_predicted( idx ) = _measurement( position_prediction( idx ), w ); % prediction measurement
 
 
 
       d = observation - observation_predicted;  % diff betw the pred measurement and observation
-      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); % asgn importance weight to each particle
+      % FIXME
+      
+%      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); 
+      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); 
+                                % asgn importance weight to each particle
+      
+
     endfor
     particles_weight = particles_weight./sum( particles_weight ); % normalize the likelihood of each a priori estimate
 
@@ -252,7 +260,7 @@ endfunction
 
 %% init
 worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
-probability = [ 1 1 1 1 1 1 1 1 1 1 ];
+particles = [ 1 1 1 1 1 1 1 1 1 1 ];
 worldsize = length( worldmap );
 robot = 1;
 robot_sensing = -1;
@@ -271,16 +279,16 @@ printf("robot on position %d\n", robot);
 
 % 1st iteration
 robot_sensing = sensing( robot, worldmap );
-probability = particlefilter( worldmap, probability, robot_sensing, moves );
-report( 1, moves, robot_sensing, probability );
+particles = particlefilter( worldmap, particles, robot_sensing, moves );
+report( 1, moves, robot_sensing, particles );
 %figure
 %hold on;
 %grid("minor");
 %xlabel( "Positions [steps]" );
 %xlim = 10;
-%ylabel( "Probability [fraction of one]" );
+%ylabel( "Particles [fraction of one]" );
 %title( "Localization with discrete Bayes Filter" );
-%plot(0:9, probability, "c*;1st result;");
+%plot(0:9, particles, "c*;1st result;");
 
 
 return;      
@@ -290,9 +298,9 @@ return;
 moves = 3;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-probability = particlefilter( worldmap, probability, robot_sensing, moves );
-%report( 2, moves, robot_sensing, probability );
-%plot(0:9, probability, "b*;2nd result;")
+particles = particlefilter( worldmap, particles, robot_sensing, moves );
+%report( 2, moves, robot_sensing, particles );
+%plot(0:9, particles, "b*;2nd result;")
 
 
 return;       
@@ -302,9 +310,9 @@ return;
 moves = 4;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-probability = particlefilter( worldmap, probability, robot_sensing, moves );
-report( 3, moves, robot_sensing, probability );
-%plot(0:9, probability, "r*;final result;")
+particles = particlefilter( worldmap, particles, robot_sensing, moves );
+report( 3, moves, robot_sensing, particles );
+%plot(0:9, particles, "r*;final result;")
 %hold off;
 
 
