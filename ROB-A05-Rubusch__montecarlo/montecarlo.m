@@ -49,21 +49,22 @@ endfunction
 
 % nonlinear measurement function
 function [y] = _measurement( x, w )
+% TODO set by worldmap information  
   y = x^2/20 + w;
 endfunction
 
 % process noise
 function [n] = process_noise()
   vMean = 0; % mean
-  vCov  = 1; % covariance
-  n = vMean + sqrt( vCov ) * randn;
+  process_noise_covariance  = 1; % covariance
+  n = vMean + sqrt( process_noise_covariance ) * randn;
 endfunction
 
 % measurement noise
 function n = measurement_noise()
   wMean = 0; % mean
-  wCov  = 1; % covariance
-  n = wMean + sqrt( wCov ) * randn;
+  measurement_noise_covariance  = 1; % covariance
+  n = wMean + sqrt( measurement_noise_covariance ) * randn;
 endfunction
 
 % resampling
@@ -96,7 +97,7 @@ function [particles_ng] = particlefilter( worldmap, particles, observation, move
 
 
 % TODO  
-  wCov=1;     
+  measurement_noise_covariance=1;     
 
 
 
@@ -120,16 +121,17 @@ function [particles_ng] = particlefilter( worldmap, particles, observation, move
 
     % particle filtering
     for idx = 1:N
-      position_prediction( idx ) = _state_transition( particles( idx ), v, t );  % particle prediction
-      observation_predicted( idx ) = _measurement( position_prediction( idx ), w ); % prediction measurement
+      position_prediction( idx ) = _state_transition( particles( idx ), process_noise, t );  % particle prediction
+      observation_predicted( idx ) = _measurement( position_prediction( idx ), measurement_noise ); % prediction measurement
 
 
 
       d = observation - observation_predicted;  % diff betw the pred measurement and observation
       % FIXME
+      % FIXME measurement_noise_covariance not properly inited...
       
-%      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); 
-      particles_weight( idx ) = 1 / sqrt( 2 * pi * wCov ) * exp( -d^2 / (2 * wCov) ); 
+%      particles_weight( idx ) = 1 / sqrt( 2 * pi * measurement_noise_covariance ) * exp( -d^2 / (2 * measurement_noise_covariance) ); 
+      particles_weight( idx ) = 1 / sqrt( 2 * pi * measurement_noise_covariance ); % * exp( -d^2 / (2 * measurement_noise_covariance) ); 
                                 % asgn importance weight to each particle
       
 
