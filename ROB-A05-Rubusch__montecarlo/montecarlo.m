@@ -131,33 +131,23 @@ endfunction
 
 %% particle filter
 %function [particles] = particlefilter( worldmap, P_prior, measurement, moves )
-function [particles] = particlefilter( worldmap, particles, observation, moves )
+function [particles, weights] = particlefilter( worldmap, particles, weights, observation, moves )
   N = length( particles );
-%% TODO pass as parameter
-%  N1 = 10; 
-%  N2 = 100; 
-%  N3 = 1000; 
-%
-%  % init
-%  N = N1; % num of particles
-%  T = 10; % num of timesteps
-%
-%% TODO rm - no noise  
-%%  position_init = 0.1;    % init state 
-%%  position = position_init;      % initial sequence of true states 
-%%  pCov = 2;   % initial covariance of particle distribution 
-%%  measurement_noise_covariance=1;     
-%
 
-  %% weights - initial
-  weights = ones(1,N);
+% XXX   
+% TODO use moves information with map, update the "wheights - update" to handle the new pose and sensing information
+% TODO weight update still not showing up
 
   %% weights - update
   for idx=1:N % particle indexes, not positions!!
     pos_worldmap = particles(idx) - mod(particles(idx), 1); % conversion to int
 
     if 1 == observation % robot sees a landmark
-      if worldmap(pos_worldmap+1) == observation
+
+      %% handle moves and convert to an index
+      idx_worldmap = mod(pos_worldmap+moves, 10) + 1;
+
+      if worldmap(idx_worldmap) == observation
 % TODO how to connect weight to particle value?
         % if particle value is close to worldmap(idx), is around a landmark
         weights(idx) = 0.8 * weights(idx);  
@@ -167,7 +157,7 @@ function [particles] = particlefilter( worldmap, particles, observation, moves )
       endif
 
     else % robot does not see a landmark
-      if worldmap(pos_worldmap+1) == observation
+      if worldmap(idx_worldmap) == observation
 % TODO how to connect weight to particle value?
         % if particle value is close to worldmap(idx), is around a landmark
         weights(idx) = 0.6 * weights(idx);  
@@ -177,7 +167,6 @@ function [particles] = particlefilter( worldmap, particles, observation, moves )
       endif
     endif
   endfor
-
 
   % update particles
   particles = _resample( particles, weights );   
@@ -394,14 +383,14 @@ for idx=1:N
 endfor
 
 %% weights - initial
-%weights = ones(1,N);
-
+weights = ones(1,N);
+% TODO here?   
 
 % 1st iteration
 robot_sensing = sensing( robot, worldmap );
 
-particles = particlefilter( worldmap, particles, robot_sensing, moves );
-particles
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+%particles
 
 report( 1, moves, robot_sensing, particles );
 %figure
@@ -414,18 +403,18 @@ report( 1, moves, robot_sensing, particles );
 %plot(0:9, particles, "c*;1st result;");
 
 
-return;      
+%return;      
 
 
 % 2nd iteration
 moves = 3;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-particles = particlefilter( worldmap, particles, robot_sensing, moves );
-%report( 2, moves, robot_sensing, particles );
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 2, moves, robot_sensing, particles );
 %plot(0:9, particles, "b*;2nd result;")
 
-
+particles
 return;       
 
 
@@ -433,7 +422,7 @@ return;
 moves = 4;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
-particles = particlefilter( worldmap, particles, robot_sensing, moves );
+particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
 report( 3, moves, robot_sensing, particles );
 %plot(0:9, particles, "r*;final result;")
 %hold off;
