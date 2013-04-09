@@ -7,15 +7,18 @@ close all;
 
 
 % movement (for simulation)
-function [new_position] = move( steps, position, worldsize )
-  if 0 == (new_position = mod( 11+ position + steps, worldsize+1 ))
+% requires position as matlab index (betw 1 and 10)
+% returns and updated index value, between 1 and 10
+function [new_index] = move( steps, index, worldsize )
+  if 0 == steps
+    new_index = index;
+    return;
+  endif
+  if 0 == (new_index = mod( 11+ index + steps, worldsize+1 ))
     if 0 > steps
-      new_position = 10;
-    elseif 0 < steps
-      new_position = 1;
-    else
-      printf("ERROR: position input was 0 and no movements\n");
-      new_position = -1;
+      new_index = worldsize;
+    elseif 0 <= steps
+      new_index = 1;
     endif
   endif
 endfunction
@@ -35,8 +38,8 @@ function report( idx, moves, sensing, probability )
   else
     printf("NOTHING\n");
   end
-  printf("position - probability\n");
-  [ 0:9; probability]
+%  printf("position - probability\n");
+%  [ probability ]
 endfunction
 
 
@@ -72,25 +75,38 @@ endfunction
 
 % resampling
 
-function [particles] = _resample( particles, weights )
-% TODO
-
-  delta = mod(randn(),.01);
+function [particles, weights_ng] = _resample( particles, weights )
   N = length(particles);
+  weights_ng = weights;
 
   for idx=1:N % particle index
+    delta = mod(randn(),.01);
+
     %% working with particle index, not with position index! Anyway, handle transitive indexes.
     if 1 == idx
       idx_before = N;
     else
       idx_before = idx-1;
     endif
+
+    if N == idx
+      idx_after = 1;
+    else
+      idx_after = idx+1;
+    endif
+
     %% convert weights into particles
 % TODO is this correct?
-    if weights( idx_before ) > weights( idx )
+    w = max( [weights( idx_before ) ; weights( idx ) ; weights( idx_after )] );
+
+    if w == weights( idx_before )
       particles( idx ) = delta + particles( idx_before );
-    elseif weights( idx_before ) < weights( idx )
-      particles( idx_before ) = delta + particles( idx );
+      weights_ng( idx ) = weights( idx_before );  
+
+    elseif w == weights( idx_after )
+      particles( idx ) = delta + particles( idx_after );
+      weights_ng( idx ) = weights( idx_after );  
+
     endif
   endfor
 
@@ -134,49 +150,52 @@ endfunction
 function [particles, weights] = particlefilter( worldmap, particles, weights, observation, moves )
   N = length( particles );
 
-% XXX   
-% TODO use moves information with map, update the "wheights - update" to handle the new pose and sensing information
-% TODO weight update still not showing up
-
   %% weights - update
   for idx=1:N % particle indexes, not positions!!
+
+    %% get particle position w/o jitter
     pos_worldmap = particles(idx) - mod(particles(idx), 1); % conversion to int
+%    pos_worldmap   
 
+    %% move particles to new pose and add jitter again
+    particles(idx) = move( moves, pos_worldmap+1, 10) + mod(particles(idx), 1) - 1;
+%    particles(idx)    
+
+    %% get index
+    idx_worldmap = particles(idx) - mod(particles(idx), 1) + 1;
+%    idx_worldmap    
+%    printf("\n");    
+
+ 
     if 1 == observation % robot sees a landmark
-
       %% handle moves and convert to an index
-      idx_worldmap = mod(pos_worldmap+moves, 10) + 1;
 
       if worldmap(idx_worldmap) == observation
-% TODO how to connect weight to particle value?
         % if particle value is close to worldmap(idx), is around a landmark
-        weights(idx) = 0.8 * weights(idx);  
+        weights(idx) = 0.8 * weights(idx);
       else
         % if particle value is close to worldmap(idx), is around a wall
-        weights(idx) = 0.2 * weights(idx);  
+        weights(idx) = 0.2 * weights(idx);
       endif
 
     else % robot does not see a landmark
       if worldmap(idx_worldmap) == observation
-% TODO how to connect weight to particle value?
         % if particle value is close to worldmap(idx), is around a landmark
-        weights(idx) = 0.6 * weights(idx);  
+        weights(idx) = 0.6 * weights(idx);
       else
         % if particle value is close to worldmap(idx), is around a wall
-        weights(idx) = 0.4 * weights(idx);  
+        weights(idx) = 0.4 * weights(idx);
       endif
     endif
   endfor
 
   % update particles
-  particles = _resample( particles, weights );   
+  [particles, weights] = _resample( particles, weights );
 
   % DEBUG
 %  [ particles; worldmap; weights ]
 
 return;
-
-
 
   particles = position_init + sqrt( pCov ) * randn( length( position_init ), N ); % init particles
   position_prediction = zeros( length(position_init), N ); % init state estimate
@@ -235,7 +254,7 @@ return;
 
 
     %% resampling
-    particles_ng = _resample( position_prediction, particles_weight );
+    [particles_ng, weights] = _resample( position_prediction, particles_weight );
   endfor
 
 
@@ -349,7 +368,6 @@ endfunction
 
 %% init
 worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
-particles = [ 1 1 1 1 1 1 1 1 1 1 ];
 worldsize = length( worldmap );
 robot = 1;
 robot_sensing = -1;
@@ -368,29 +386,38 @@ printf("robot on position %d\n", robot);
 
 % TODO pass as parameter
 N1 = 10; 
+N20 = 20;
 N2 = 100; 
 N3 = 1000; 
 
 %% init
-N = N1; % num of particles
+N = N20; % num of particles    
 %  T = 10; % num of timesteps, not necessary - moving and sensing
 
 %% particles - initial
-particles = ones(1,N);
-for idx=1:N
+particles = zeros(1,N);
+for idx=2:N
 %    particles(idx+1) = 2*pi/10 * idx; % working on circle
-  particles(idx) = idx-1; % working on positions
+
+%% N1
+%  particles( idx ) = idx-1; % working on positions
+
+%% N20
+   particles( idx ) = particles( idx-1 ) + mod( idx, 2);
 endfor
 
 %% weights - initial
 weights = ones(1,N);
-% TODO here?   
+
 
 % 1st iteration
 robot_sensing = sensing( robot, worldmap );
 
 [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-%particles
+
+
+[particles ; weights]   
+
 
 report( 1, moves, robot_sensing, particles );
 %figure
@@ -414,8 +441,10 @@ robot_sensing = sensing( robot, worldmap );
 report( 2, moves, robot_sensing, particles );
 %plot(0:9, particles, "b*;2nd result;")
 
-particles
-return;       
+
+[particles ; weights]   
+
+%return;       
 
 
 % 3rd iteration
@@ -426,6 +455,8 @@ particles = particlefilter( worldmap, particles, weights, robot_sensing, moves )
 report( 3, moves, robot_sensing, particles );
 %plot(0:9, particles, "r*;final result;")
 %hold off;
+
+[particles ; weights]   
 
 
 printf( "READY.\n" );
