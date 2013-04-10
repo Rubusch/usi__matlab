@@ -3,7 +3,7 @@
 % 2013-mar-25
 
 % cleanup
-close all;
+clc; close all;
 
 
 % movement (for simulation)
