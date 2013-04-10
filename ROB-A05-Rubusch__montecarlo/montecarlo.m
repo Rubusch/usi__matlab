@@ -39,7 +39,7 @@ function report( idx, moves, sensing, probability )
     printf("NOTHING\n");
   end
 %  printf("position - probability\n");
-%  [ probability ]
+  probability
 endfunction
 
 
@@ -147,25 +147,24 @@ printf("robot on position %d\n", robot);
 
 % TODO pass as parameter
 N1 = 10; 
-N20 = 20;
 N2 = 100; 
 N3 = 1000; 
 
 %% init
-N = N20; % num of particles    
+N = N1; % num of particles    
 %  T = 10; % num of timesteps, not necessary - moving and sensing
 
 %% particles - initial
 particles = zeros(1,N);
-for idx=2:N
-%    particles(idx+1) = 2*pi/10 * idx; % working on circle
-
-%% N1
-%  particles( idx ) = idx-1; % working on positions
-
-%% N20
-   particles( idx ) = particles( idx-1 ) + mod( idx, 2);
+pos_particle = 0;
+fraction = N / 10;
+for idx=1:N
+  particles(idx) = pos_particle;
+  if 0 == mod(idx, fraction)
+    pos_particle += 1;
+  endif
 endfor
+
 
 %% weights - initial
 weights = ones(1,N);
@@ -177,7 +176,7 @@ robot_sensing = sensing( robot, worldmap );
 [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
 
 
-[particles ; weights]   
+%particles
 
 
 report( 1, moves, robot_sensing, particles );
@@ -203,7 +202,7 @@ report( 2, moves, robot_sensing, particles );
 %plot(0:9, particles, "b*;2nd result;")
 
 
-[particles ; weights]   
+%particles
 
 %return;       
 
@@ -217,7 +216,7 @@ report( 3, moves, robot_sensing, particles );
 %plot(0:9, particles, "r*;final result;")
 %hold off;
 
-[particles ; weights]   
+% [particles ; weights]   
 
 
 printf( "READY.\n" );
