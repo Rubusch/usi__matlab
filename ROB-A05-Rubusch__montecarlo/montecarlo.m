@@ -80,7 +80,7 @@ function [particles, weights_ng] = _resample( particles, weights )
   weights_ng = weights;
 
   for idx=1:N % particle index
-    delta = mod(randn(),.01);
+%    delta = mod(randn(),.01);  
 
     %% working with particle index, not with position index! Anyway, handle transitive indexes.
     if 1 == idx
@@ -96,16 +96,15 @@ function [particles, weights_ng] = _resample( particles, weights )
     endif
 
     %% convert weights into particles
-% TODO is this correct?
     w = max( [weights( idx_before ) ; weights( idx ) ; weights( idx_after )] );
 
     if w == weights( idx_before )
-      particles( idx ) = delta + particles( idx_before );
-      weights_ng( idx ) = weights( idx_before );  
+      particles( idx ) = particles( idx_before );
+      weights_ng( idx ) = weights( idx_before );
 
     elseif w == weights( idx_after )
-      particles( idx ) = delta + particles( idx_after );
-      weights_ng( idx ) = weights( idx_after );  
+      particles( idx ) = particles( idx_after );
+      weights_ng( idx ) = weights( idx_after );
 
     endif
   endfor
