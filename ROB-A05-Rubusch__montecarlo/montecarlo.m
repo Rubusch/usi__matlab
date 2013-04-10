@@ -108,40 +108,8 @@ function [particles, weights_ng] = _resample( particles, weights )
 
     endif
   endfor
-
-
-%% TODO what is omega(0)?
-%  c = weights(1);
-%  N = length(particles);
-%  idx = 0;
-%  for jdx=0:N-1
-%    u = delta + jdx*(N-1);
-%    while u > c
-%      idx = idx+1;
-%      if idx >= N
-%        break
-%      endif
-%      c = c + weights(idx);
-%% TODO: what has 'c' to do with the particles?
-%    endwhile
-%% TODO: how to generate the new particle entries?
-%  endfor
-
-
-%function [particles] = _resample(xp, pdf)
-%  cdf = cumsum( pdf ); % cumulative sum
-%  diff = cdf' * ones( 1, length(pdf) ) -  ones( length(pdf), 1) * rand( 1, length(pdf) );
-%  diff = (diff <= 0) * 2 + diff;
-%  [~, idx] = min(diff);
-%  particles = xp(idx);
 endfunction
 
-% jitter
-      
-function [particle1, particle2] = _jitter( particle )
-  particle1 = particle - mod(randn, 1);
-  particle2 = particle + mod(randn, 1);
-endfunction
 
 
 %% particle filter
@@ -154,18 +122,13 @@ function [particles, weights] = particlefilter( worldmap, particles, weights, ob
 
     %% get particle position w/o jitter
     pos_worldmap = particles(idx) - mod(particles(idx), 1); % conversion to int
-%    pos_worldmap   
 
     %% move particles to new pose and add jitter again
     particles(idx) = move( moves, pos_worldmap+1, 10) + mod(particles(idx), 1) - 1;
-%    particles(idx)    
 
     %% get index
     idx_worldmap = particles(idx) - mod(particles(idx), 1) + 1;
-%    idx_worldmap    
-%    printf("\n");    
 
- 
     if 1 == observation % robot sees a landmark
       %% handle moves and convert to an index
 
@@ -191,173 +154,14 @@ function [particles, weights] = particlefilter( worldmap, particles, weights, ob
   % update particles
   [particles, weights] = _resample( particles, weights );
 
-  % DEBUG
-%  [ particles; worldmap; weights ]
-
 return;
 
   particles = position_init + sqrt( pCov ) * randn( length( position_init ), N ); % init particles
   position_prediction = zeros( length(position_init), N ); % init state estimate
   position_hat = []; % init sequence of state estimates
-
-%  particles_weight = zeros( 1, N ); % init particle weights
   particles_weight = ones( 1, N ); % init particle weights
 
-
-    
   particles_ng = particles; % initial set empty    
-  return;    
-    
-
-
-  for t = 1:T
-    %% normally do it online, here: by every timestep (discrete)
-%    % nonlinear discrete time system with additive noise     
-    position_init = _state_transition( position_init, process_noise, t ); % true state at time t
-    observation = _measurement( position_init, measurement_noise ); % observation at time t
-
-
-
-
-    % particle filtering
-    for idx = 1:N
-
-      %% sample
-      position_prediction( idx ) = _state_transition( particles( idx ), process_noise, t );  % particle prediction
-      observation_predicted( idx ) = _measurement( position_prediction( idx ), measurement_noise ); % prediction measurement
-
-
-%      d = observation - observation_predicted;  % diff betw the pred measurement and observation
-      d = observation(idx) - observation_predicted(idx);  % diff betw the pred measurement and observation
-
-
-      %% sensor model
-      % FIXME
-      % FIXME measurement_noise_covariance not properly inited...
-      
-      particles_weight( idx ) = 1 / sqrt( 2 * pi * measurement_noise_covariance ) * exp( -d^2 / (2 * measurement_noise_covariance) ); 
-%      particles_weight( idx ) = 1 / sqrt( 2 * pi * measurement_noise_covariance ); % * exp( -d^2 / (2 * measurement_noise_covariance) ); 
-                                % asgn importance weight to each particle
-      
-    endfor
-
-
-    %% normalize the likelihood of each a priori estimate
-    particles_weight = particles_weight ./ sum( particles_weight );
-
-
-    % the state estimate is the weighted mean of the particles
-    position_weighted_hat = particles_weight * particles'; % weighted sum
-    position = [ position position_init ];
-    position_hat = [ position_hat position_weighted_hat ];     % update sequence of true states and state estimates
-
-
-    %% resampling
-    [particles_ng, weights] = _resample( position_prediction, particles_weight );
-  endfor
-
-
-
-
-
-%                     
-%
-%  worldsize = length( worldmap );
-%% TODO sample(x(i) ; omega(i))
-%  samples = [ P_prior ; randn(1, worldsize) ];  
-%
-%  % weighting factor
-%  omega = zeros( 1, worldsize );
-%
-%  % probabilities, sensor
-%  p_see = 0.8;                % P( see landmark       | landmark )
-%  p_see_err = 1-p_see;        % P( don't see landmark | landmark )
-%  p_notsee_err = 0.4;         % P( see landmark       | no landmark )
-%  p_notsee = 1-p_notsee_err;  % P( don't see landmark | no landmark )
-%
-%
-%
-%% TODO is this needed?
-%%  for i=1:worldsize
-%    for j=1:worldsize
-%      %% motion model
-%% TODO 
-%      ;
-%    endfor
-%
-%    nu = 0;
-%    for j=1:worldsize
-%      %% sensor model
-%      if 1 == worldmap(j)
-%        % map shows a landmark, and...
-%        if 1 == measurement
-%          % ...a landmark sensed
-%          omega(j) = p_see;
-%        else
-%          % ...no landmark sensed (incorrect)
-%          omega(j) = p_see_err;
-%        endif
-%      else
-%        % map has NO landmark, and...
-%        if 1 != measurement
-%          % ...no landmark sensed
-%          omega(j) = p_notsee;
-%        else
-%          % ...a landmark sensed (incorrect)
-%          omega(j) = p_notsee_err;
-%        endif
-%      endif
-%      %% calculate normalization factor
-%      nu += omega(j);
-%    endfor % j
-%
-%    %% normalize
-%    for j=1:worldsize
-%      omega(j) *= 1/nu;
-%    endfor % j
-%
-%    %% resampling
-%% TODO check
-%    jitter = randn(1,worldsize);  
-%    c = omega(1);
-%    u = zeros(1, worldsize);  
-%%    i_next = i;  
-%    i_next = 0;  
-%    for j=1:worldsize
-%%      u(i) = jitter + j*1/worldsize;  
-%      u = jitter + j*1/worldsize;  
-%%      while u(i) > c  
-%      while u > c  
-%        i_next++;  
-%%        c += omega(i);  
-%        c += omega;  
-%      endwhile
-%%      samples_next = union( samples, x(i) );  
-%% TODO merge to samples_next
-%    endfor
-% TODO
-%  endfor % i
-
-
-
-
-% for i=1; i<k do % normally done online
-%     for j=1; j<N do % for all particles
-%         compute a new state x by sampling according to P(x|u(i-1,x(j)));
-%         x_hat(j) = x;
-%     endfor
-%     nu = 0;
-%     for j=1; j<N do % for all particles
-%         omega(j) = P(y(i)|x(j)); % sensor model
-%         nu = nu + omega(j) % calculate normalization factor
-%     endfor
-%     for j=1; j<N do % for all particles
-%         omega(j) = inv(nu) * omega(j); % normalize
-%     endfor
-%     M = resampling(M);
-% endfor
-
-% TODO
 endfunction
 
 
