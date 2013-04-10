@@ -43,45 +43,12 @@ function report( idx, moves, sensing, probability )
 endfunction
 
 
-%% aux functions
-
-% nonlinear state transition equation
-function [x] = _state_transition( x, v, t )
-%  x = 0.5 * x  +  25 * x / (1 + x^2 )  +  8 * cos( 1.2 * (t-1))  +  v;
-  % move some timesteps t, and return new x; don't care about noise
-    
-endfunction
-
-% nonlinear measurement function
-function [y] = _measurement( x, w )
-% TODO set by worldmap information  
-%  y = x^2/20 + w;
-    
-endfunction
-
-%% process noise
-%function [n] = process_noise()
-%  vMean = 0; % mean
-%  process_noise_covariance  = 1; % covariance
-%  n = vMean + sqrt( process_noise_covariance ) * randn;
-%endfunction
-%
-%% measurement noise
-%function n = measurement_noise()
-%  wMean = 0; % mean
-%  measurement_noise_covariance  = 1; % covariance
-%  n = wMean + sqrt( measurement_noise_covariance ) * randn;
-%endfunction
-
 % resampling
-
 function [particles, weights_ng] = _resample( particles, weights )
   N = length(particles);
   weights_ng = weights;
 
   for idx=1:N % particle index
-%    delta = mod(randn(),.01);  
-
     %% working with particle index, not with position index! Anyway, handle transitive indexes.
     if 1 == idx
       idx_before = N;
@@ -153,15 +120,6 @@ function [particles, weights] = particlefilter( worldmap, particles, weights, ob
 
   % update particles
   [particles, weights] = _resample( particles, weights );
-
-return;
-
-  particles = position_init + sqrt( pCov ) * randn( length( position_init ), N ); % init particles
-  position_prediction = zeros( length(position_init), N ); % init state estimate
-  position_hat = []; % init sequence of state estimates
-  particles_weight = ones( 1, N ); % init particle weights
-
-  particles_ng = particles; % initial set empty    
 endfunction
 
 
