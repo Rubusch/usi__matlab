@@ -40,8 +40,13 @@ function report( idx, moves, sensing, probability )
   end
   printf("position - particles\n");
   [ 0:9 ; histc(probability, 0:9) ]
-  figure
-  hist(probability, 0:9)
+  if 3 == idx
+    hist(probability, 0:9);
+  else
+    hist(probability, 0:9);
+  endif
+  ylabel("particles");
+  xlabel("current position");
 endfunction
 
 
@@ -166,20 +171,27 @@ function run_particle_robot( N )
 
   robot_sensing = sensing( robot, worldmap );
   [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  figure;
+
+  subplot(3,1,1);
   report( 1, moves, robot_sensing, particles );
 
   moves = 3;
   robot = move( moves, robot, worldsize);
   robot_sensing = sensing( robot, worldmap );
   [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  subplot(3,1,2);
   report( 2, moves, robot_sensing, particles );
 
   moves = 4;
   robot = move( moves, robot, worldsize);
   robot_sensing = sensing( robot, worldmap );
   particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  subplot(3,1,3);
   report( 3, moves, robot_sensing, particles );
+
   printf("\n\n");
+
 endfunction
 
 
