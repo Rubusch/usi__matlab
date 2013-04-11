@@ -87,6 +87,9 @@ function [particles, weights] = particlefilter( worldmap, particles, weights, ob
   %% weights - update
   for idx=1:N % particle indexes, not positions!!
 
+
+    %% MOTION MODEL
+
     %% get particle position w/o jitter
     pos_worldmap = particles(idx) - mod(particles(idx), 1); % conversion to int
 
@@ -133,8 +136,6 @@ worldsize = length( worldmap );
 robot = 1;
 robot_sensing = -1;
 moves = 0;
-% robot position in world, unknown to the robot!
-%robot = mod(abs(int8(randn * 100)), worldsize)
 
 
 printf("########################################################################\n");
@@ -152,7 +153,6 @@ N3 = 1000;
 
 %% init
 N = N1; % num of particles    
-%  T = 10; % num of timesteps, not necessary - moving and sensing
 
 %% particles - initial
 particles = zeros(1,N);
@@ -165,58 +165,110 @@ for idx=1:N
   endif
 endfor
 
-
 %% weights - initial
 weights = ones(1,N);
+robot = 1;
+robot_sensing = -1;
+moves = 0;
 
 
-% 1st iteration
 robot_sensing = sensing( robot, worldmap );
-
 [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-
-
-%particles
-
-
 report( 1, moves, robot_sensing, particles );
-%figure
-%hold on;
-%grid("minor");
-%xlabel( "Positions [steps]" );
-%xlim = 10;
-%ylabel( "Particles [fraction of one]" );
-%title( "Localization with discrete Bayes Filter" );
-%plot(0:9, particles, "c*;1st result;");
 
-
-%return;      
-
-
-% 2nd iteration
 moves = 3;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
 [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
 report( 2, moves, robot_sensing, particles );
-%plot(0:9, particles, "b*;2nd result;")
 
-
-%particles
-
-%return;       
-
-
-% 3rd iteration
 moves = 4;
 robot = move( moves, robot, worldsize);
 robot_sensing = sensing( robot, worldmap );
 particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
 report( 3, moves, robot_sensing, particles );
-%plot(0:9, particles, "r*;final result;")
-%hold off;
 
-% [particles ; weights]   
+
+
+
+
+%% init
+N = N2; % num of particles    
+
+%% particles - initial
+particles = zeros(1,N);
+pos_particle = 0;
+fraction = N / 10;
+for idx=1:N
+  particles(idx) = pos_particle;
+  if 0 == mod(idx, fraction)
+    pos_particle += 1;
+  endif
+endfor
+
+%% weights - initial
+weights = ones(1,N);
+robot = 1;
+robot_sensing = -1;
+moves = 0;
+
+
+robot_sensing = sensing( robot, worldmap );
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 1, moves, robot_sensing, particles );
+
+moves = 3;
+robot = move( moves, robot, worldsize);
+robot_sensing = sensing( robot, worldmap );
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 2, moves, robot_sensing, particles );
+
+moves = 4;
+robot = move( moves, robot, worldsize);
+robot_sensing = sensing( robot, worldmap );
+particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 3, moves, robot_sensing, particles );
+
+
+
+
+%% init
+N = N3; % num of particles    
+
+%% particles - initial
+particles = zeros(1,N);
+pos_particle = 0;
+fraction = N / 10;
+for idx=1:N
+  particles(idx) = pos_particle;
+  if 0 == mod(idx, fraction)
+    pos_particle += 1;
+  endif
+endfor
+
+%% weights - initial
+weights = ones(1,N);
+robot = 1;
+robot_sensing = -1;
+moves = 0;
+
+
+robot_sensing = sensing( robot, worldmap );
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 1, moves, robot_sensing, particles );
+
+moves = 3;
+robot = move( moves, robot, worldsize);
+robot_sensing = sensing( robot, worldmap );
+[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 2, moves, robot_sensing, particles );
+
+moves = 4;
+robot = move( moves, robot, worldsize);
+robot_sensing = sensing( robot, worldmap );
+particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+report( 3, moves, robot_sensing, particles );
+
 
 
 printf( "READY.\n" );
