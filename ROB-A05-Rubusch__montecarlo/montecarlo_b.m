@@ -38,8 +38,10 @@ function report( idx, moves, sensing, probability )
   else
     printf("NOTHING\n");
   end
-%  printf("position - probability\n");
-  probability
+  printf("position - particles\n");
+  [ 0:9 ; histc(probability, 0:9) ]
+  figure
+  hist(probability, 0:9)
 endfunction
 
 
@@ -48,14 +50,24 @@ function [particles, weights_ng] = _resample( particles, weights )
   N = length(particles);
   weights_ng = weights;
 
+  %% shuffle points
+  dataset = [particles ; weights];
+  dataset= dataset(:, randperm(length(dataset)));
+  particles = dataset(1,:);
+  weights = dataset(2,:);
+
+  %% resample
   for idx=1:N % particle index
     %% working with particle index, not with position index! Anyway, handle transitive indexes.
+
+    %% underrun
     if 1 == idx
       idx_before = N;
     else
       idx_before = idx-1;
     endif
 
+    %% overrun
     if N == idx
       idx_after = 1;
     else
@@ -126,16 +138,58 @@ function [particles, weights] = particlefilter( worldmap, particles, weights, ob
 endfunction
 
 
+%% test runs
+function run_particle_robot( N )
+  N = 100;
+  worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
+  worldsize = length( worldmap );
+
+  %% particles - initial
+  particles = zeros(1,N);
+  pos_particle = 0;
+  fraction = N / 10;
+  for idx=1:N
+    particles(idx) = pos_particle;
+    if 0 == mod(idx, fraction)
+      pos_particle += 1;
+    endif
+  endfor
+
+  %% weights - initial
+  weights = ones(1,N);
+  robot = 1;
+  robot_sensing = -1;
+  moves = 0;
+
+  robot_sensing = sensing( robot, worldmap );
+  [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  report( 1, moves, robot_sensing, particles );
+
+  moves = 3;
+  robot = move( moves, robot, worldsize);
+  robot_sensing = sensing( robot, worldmap );
+  [particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  report( 2, moves, robot_sensing, particles );
+
+  moves = 4;
+  robot = move( moves, robot, worldsize);
+  robot_sensing = sensing( robot, worldmap );
+  particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
+  report( 3, moves, robot_sensing, particles );
+  printf("\n\n");
+endfunction
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% START                                                                        
 
 %% init
-worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
-worldsize = length( worldmap );
+%worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
+%worldsize = length( worldmap );   
 robot = 1;
-robot_sensing = -1;
-moves = 0;
+%robot_sensing = -1;
+%moves = 0;
 
 
 printf("########################################################################\n");
@@ -145,130 +199,14 @@ printf("robot on position %d\n", robot);
 % print world
 [ 0:9; worldmap ]
 
+%% init - 10 particles
+run_particle_robot( 100 );
 
-% TODO pass as parameter
-N1 = 10; 
-N2 = 100; 
-N3 = 1000; 
+%% init - 100 particles
+run_particle_robot( 100 );
 
-%% init
-N = N1; % num of particles    
-
-%% particles - initial
-particles = zeros(1,N);
-pos_particle = 0;
-fraction = N / 10;
-for idx=1:N
-  particles(idx) = pos_particle;
-  if 0 == mod(idx, fraction)
-    pos_particle += 1;
-  endif
-endfor
-
-%% weights - initial
-weights = ones(1,N);
-robot = 1;
-robot_sensing = -1;
-moves = 0;
-
-
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 1, moves, robot_sensing, particles );
-
-moves = 3;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 2, moves, robot_sensing, particles );
-
-moves = 4;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 3, moves, robot_sensing, particles );
-
-
-
-
-
-%% init
-N = N2; % num of particles    
-
-%% particles - initial
-particles = zeros(1,N);
-pos_particle = 0;
-fraction = N / 10;
-for idx=1:N
-  particles(idx) = pos_particle;
-  if 0 == mod(idx, fraction)
-    pos_particle += 1;
-  endif
-endfor
-
-%% weights - initial
-weights = ones(1,N);
-robot = 1;
-robot_sensing = -1;
-moves = 0;
-
-
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 1, moves, robot_sensing, particles );
-
-moves = 3;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 2, moves, robot_sensing, particles );
-
-moves = 4;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 3, moves, robot_sensing, particles );
-
-
-
-
-%% init
-N = N3; % num of particles    
-
-%% particles - initial
-particles = zeros(1,N);
-pos_particle = 0;
-fraction = N / 10;
-for idx=1:N
-  particles(idx) = pos_particle;
-  if 0 == mod(idx, fraction)
-    pos_particle += 1;
-  endif
-endfor
-
-%% weights - initial
-weights = ones(1,N);
-robot = 1;
-robot_sensing = -1;
-moves = 0;
-
-
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 1, moves, robot_sensing, particles );
-
-moves = 3;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-[particles, weights] = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 2, moves, robot_sensing, particles );
-
-moves = 4;
-robot = move( moves, robot, worldsize);
-robot_sensing = sensing( robot, worldmap );
-particles = particlefilter( worldmap, particles, weights, robot_sensing, moves );
-report( 3, moves, robot_sensing, particles );
-
-
+%% init - 1000 particles
+run_particle_robot( 1000 );
 
 printf( "READY.\n" );
+
