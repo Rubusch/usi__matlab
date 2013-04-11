@@ -144,6 +144,9 @@ function run_particle_robot( N )
   worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
   worldsize = length( worldmap );
 
+  %% print world (just information)
+  world_with_landmarks = [ 0:9; worldmap ]
+
   %% particles - initial
   particles = zeros(1,N);
   pos_particle = 0;
@@ -183,21 +186,7 @@ endfunction
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% START                                                                        
-
-%% init
-%worldmap    = [ 1 0 0 1 0 0 1 0 0 0 ];
-%worldsize = length( worldmap );   
-robot = 1;
-%robot_sensing = -1;
-%moves = 0;
-
-
 printf("########################################################################\n");
-printf("robot on position %d\n", robot);
-
-
-% print world
-[ 0:9; worldmap ]
 
 %% init - 10 particles
 run_particle_robot( 100 );
@@ -209,4 +198,3 @@ run_particle_robot( 100 );
 run_particle_robot( 1000 );
 
 printf( "READY.\n" );
-
