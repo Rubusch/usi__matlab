@@ -41,9 +41,9 @@ function report( idx, moves, sensing, probability )
   printf("position - particles\n");
   [ 0:9 ; histc(probability, 0:9) ]
   if 3 == idx
-    hist(probability, 0:9);
+    hist(probability, 0:9, 'r');
   else
-    hist(probability, 0:9);
+    hist(probability, 0:9, 'c');
   endif
   ylabel("particles");
   xlabel("current position");
