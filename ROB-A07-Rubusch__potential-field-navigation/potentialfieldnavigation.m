@@ -74,5 +74,42 @@ clc; close all;
 %
 
 
+% TODO
+% -> field: 200 x 300cm
+% -> obstacles (round): 15cm
+% -> 9 obstacles
+% -> robot: 7cm diameter
+% -> stepsize, e.g. 5cm
+
+% 1a)
+% -> repulsing potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+%
+% 1b)
+% -> attractive potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+%
+% 2a)
+% -> method: extend the diameter of the obstacles
+% -> repulsing potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+%
+% 2b)
+% -> method: extend the diameter of the obstacles
+% -> attractive potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+%
+% 3a)
+% -> setup where the robot cannot reach the goal with the potential field method
+% -> repulsing potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+%
+% 3b)
+% -> setup where the robot cannot reach the goal with the potential field method
+% -> attractive potential field
+% -> visualize in 2D and/or in 3D using MATLAB
+
+    
+
 
 printf( "READY.\n" );
