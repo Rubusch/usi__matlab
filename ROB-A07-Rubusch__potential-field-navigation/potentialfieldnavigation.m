@@ -1,9 +1,13 @@
 % ASSIGNMENT07
 % Lothar Rubusch
 % 2013-Apr-29
+printf( "\n\nASSIGNMENT07 - Robotics\n" );
+printf( "Lothar Rubusch\n" );
+printf( "2013-Apr-29\n\n" );
+
 
 % cleanup
-clc; close all;
+clear; clc; close all;
 
 % Implement a potential field navigation strategy with round round obstacles and
 % the repulsing and attractive functions given in the previous lecture. The
@@ -50,7 +54,7 @@ clc; close all;
 %% Formulae
 %
 % potential field
-% U_att(q) = 1/2 * k(att) rho_goal^2(q)
+% U_att(q) = 1/2 * k(att) * rho_goal^2(q)
 %
 % attracting force converges linearily towards 0 (goal)
 % F_att(q) = -nabla(U_att( q ))
@@ -109,7 +113,72 @@ clc; close all;
 % -> attractive potential field
 % -> visualize in 2D and/or in 3D using MATLAB
 
-    
+function db_print( M, YMAX, XMAX )
+  for yval=1:YMAX
+    printf( "\n" );
+    for xval=1:XMAX
+      val = M(XMAX * (yval-1) + xval , 3);
+      printf( "%2.1f\t", val );
+    endfor
+  endfor
+endfunction
 
+
+%% set up field
+XMAX=20
+YMAX=40
+dx=0; dy=0;
+
+%% goal
+goal = [ 10 20 ];
+
+%% obstacle
+#obst1 = [ 5 5 ; 6 5; 7 5 ];
+obst1 = [ 5 10 ];  
+
+%% method
+k_att = 0.5;    
+
+M=[];
+for yval=1:YMAX
+  for xval=1:XMAX
+
+    %% base potential
+    dx = xval - goal(1);
+    dy = yval - goal(2);
+    pot = sqrt(dx^2 + dy^2);
+
+    %% attraction
+    pot = -k_att * pot;
+
+    %% operations...
+    % TODO    
+
+    %% model obstacles
+% TODO
+    for xobst=1:length(obst1)
+      for yobst=1:length(obst1)
+        dx = xval - xobst;
+        dy = yval - yobst;
+        
+        pot += sqrt(dx^2 + dy^2);     
+      endfor
+    endfor
+
+    %% round up
+    M = [M ; [xval yval pot]];
+
+  endfor
+endfor
+
+%% DEBUGGING
+%db_print( M, YMAX, XMAX );
+%M
+plot3(M(:,1), M(:,3), M(:,2), "b*")
+#plot3(M(:,3), M(:,1), M(:,2), "b.")
+%num2str( M, "%2.1f " )   
+
+
+%% find way through it
 
 printf( "READY.\n" );
