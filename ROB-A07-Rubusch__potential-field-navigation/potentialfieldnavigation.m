@@ -125,12 +125,12 @@ endfunction
 
 
 %% set up field
-XMAX=20
+XMAX=60
 YMAX=40
 dx=0; dy=0;
 
 %% goal
-goal = [ 10 20 ];
+goal = [ 10 10 ];
 
 %% obstacle
 #obst1 = [ 5 5 ; 6 5; 7 5 ];
@@ -148,25 +148,28 @@ for yval=1:YMAX
     dy = yval - goal(2);
     pot = sqrt(dx^2 + dy^2);
 
+    M(xval,yval) = pot;
+
+
     %% attraction
-    pot = -k_att * pot;
+%    pot = -k_att * pot;
 
     %% operations...
     % TODO    
 
     %% model obstacles
 % TODO
-    for xobst=1:length(obst1)
-      for yobst=1:length(obst1)
-        dx = xval - xobst;
-        dy = yval - yobst;
-        
-        pot += sqrt(dx^2 + dy^2);     
-      endfor
-    endfor
-
+%    for xobst=1:length(obst1)
+%      for yobst=1:length(obst1)
+%        dx = xval - xobst;
+%        dy = yval - yobst;
+%        
+%        pot += sqrt(dx^2 + dy^2);     
+%      endfor
+%    endfor
+%
     %% round up
-    M = [M ; [xval yval pot]];
+%    M = [M ; [xval yval pot]];
 
   endfor
 endfor
@@ -174,10 +177,20 @@ endfor
 %% DEBUGGING
 %db_print( M, YMAX, XMAX );
 %M
-plot3(M(:,1), M(:,3), M(:,2), "b*")
+#plot3(M(:,1), M(:,3), M(:,2), "b*")
 #plot3(M(:,3), M(:,1), M(:,2), "b.")
 %num2str( M, "%2.1f " )   
+%tx = ty = linspace(1,XMAX,XMAX);
 
+%% DEBUG
+tx = [1:XMAX];
+ty = [1:YMAX];
+[xx,yy] = meshgrid( tx, ty );
+mesh( tx, ty, M' );
+
+
+
+%mesh(M(:,1), M(:,3), M(:,2))
 
 %% find way through it
 
