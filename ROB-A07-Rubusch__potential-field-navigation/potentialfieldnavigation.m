@@ -173,7 +173,6 @@ function [ ret ] = isinbacktrack( backtrack, y, x )
   for( i=1:size(backtrack)(1) )
     if( y == backtrack(i,1) )
       if( x == backtrack(i,2) )
-%        printf( "BACKTRACK\n" ); 
         ret = 1;
         return;
       endif
@@ -229,19 +228,14 @@ function [ solution ] = solve( M, start, goal )
     %% find x_next and y_next (smallest val in M)
     U_next = min( [ U_up U_down U_left U_right ] );
     if( U_next == U_down )
-%      printf( "down\n" ); 
       y = y-1;
     elseif( U_next == U_right )
-%      printf( "right\n" ); 
       x = x+1;
     elseif( U_next == U_up )
-%      printf( "up\n" ); 
       y = y+1;
     elseif( U_next == U_left )
-%      printf( "left\n" ); 
       x = x-1;
     else
-%      printf( "dead end\n" ); 
       break
     endif
 
@@ -250,10 +244,6 @@ function [ solution ] = solve( M, start, goal )
       break;
     endif
     solution = [ solution ; y x M(y,x) ];
-
-%    if( 200 == idx )  
-%      break;  
-%    endif     
   endwhile
 endfunction
 
@@ -262,7 +252,6 @@ endfunction
 
 %% repulsive potential field
 function [ M_ng ] = repulsive_potential_field( M )
-  %% obstacle
   obs1 = [ 26 44; 25 45 ; 26 45; 27 45; 26 46 ];
   M = set_obstacle( M, obs1 );
 
@@ -326,9 +315,6 @@ start = [ 1 1 ];
 ty = [1:size(M)(1)];
 tx = [1:size(M)(2)];
 
-% [xx,yy] = meshgrid( ty, tx ); 
-
-
 %% repulsive potential field
 M = repulsive_potential_field( M );
 M = normalize( M );
@@ -337,18 +323,12 @@ M = normalize( M );
 M = attractive_potential_field( M, goal );
 M = normalize( M );
 
-%% DEBUG
+%% visualization
 figure
 mesh( tx, ty, M );
 hold on
 solution = solve( M, start, goal );
-
-%solution  
-
 plot3( solution(:,2), solution(:,1), solution(:,3)+0.1, "r*" );
-
-% TODO rm
-%mesh(M(:,1), M(:,3), M(:,2))
 
 %% find way through it
 
