@@ -168,23 +168,93 @@ function [ M_ng ] = set_obstacle( M, obs )
   endfor
 endfunction
 
-function [ solution ] = solve( M, start )
+%% backtrack for solver
+function [ ret ] = isinbacktrack( backtrack, y, x )
+  for( i=1:size(backtrack)(1) )
+    if( y == backtrack(i,1) )
+      if( x == backtrack(i,2) )
+%        printf( "BACKTRACK\n" ); 
+        ret = 1;
+        return;
+      endif
+    endif
+  endfor
+  ret = 0;
+endfunction
+
+%% solver for path
+function [ solution ] = solve( M, start, goal )
   % init
   y = start(1);
   x = start(2);
-  solution = [ y x ];
+  solution = [ y x M(y,x)];
+  backtrack = [];
   idx = 1;
+  U = 0;
 
   while 1
+    backtrack = [ backtrack ; y x ];
+
     y = solution(idx,1);
     x = solution(idx,2);
     idx += 1;
 
-    
-    break;
+    U = M(y,x);
 
+    %% scan
+    if( (size(M)(1) <= y) || 1 == isinbacktrack( backtrack, y+1, x) )
+      U_up    = 10;
+    else
+      U_up    = M( y+1, x );
+    endif
+
+    if( (1 >= y) || 1 == isinbacktrack( backtrack, y-1, x) )
+      U_down  = 10;
+    else
+      U_down  = M( y-1, x );
+    endif
+
+    if( (1 >= x) || 1 == isinbacktrack( backtrack, y, x-1) )
+      U_left  = 10;
+    else
+      U_left  = M( y, x-1 );
+    endif
+
+    if( (size(M)(2) <= x) || 1 == isinbacktrack( backtrack, y, x+1) )
+      U_right = 10;
+    else
+      U_right = M( y, x+1 );
+    endif
+
+    %% find x_next and y_next (smallest val in M)
+    U_next = min( [ U_up U_down U_left U_right ] );
+    if( U_next == U_down )
+%      printf( "down\n" ); 
+      y = y-1;
+    elseif( U_next == U_right )
+%      printf( "right\n" ); 
+      x = x+1;
+    elseif( U_next == U_up )
+%      printf( "up\n" ); 
+      y = y+1;
+    elseif( U_next == U_left )
+%      printf( "left\n" ); 
+      x = x-1;
+    else
+%      printf( "dead end\n" ); 
+      break
+    endif
+
+    %% if x and y is goal, break
+    if( y == goal(1,1) && x == goal(1, 2) )
+      break;
+    endif
+    solution = [ solution ; y x M(y,x) ];
+
+%    if( 200 == idx )  
+%      break;  
+%    endif     
   endwhile
-
 endfunction
 
 
@@ -252,10 +322,11 @@ XMAX=60
 YMAX=40
 M=zeros(YMAX, XMAX);
 goal = [ 40 60 ];
-start = [ 0 0 ];
+start = [ 1 1 ];
 ty = [1:size(M)(1)];
 tx = [1:size(M)(2)];
-% [xx,yy] = meshgrid( ty, tx );
+
+% [xx,yy] = meshgrid( ty, tx ); 
 
 
 %% repulsive potential field
@@ -270,8 +341,11 @@ M = normalize( M );
 figure
 mesh( tx, ty, M );
 hold on
-solution = solve( M, start );
-plot3( solution, "r" );
+solution = solve( M, start, goal );
+
+%solution  
+
+plot3( solution(:,2), solution(:,1), solution(:,3)+0.1, "r*" );
 
 % TODO rm
 %mesh(M(:,1), M(:,3), M(:,2))
