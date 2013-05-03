@@ -87,28 +87,6 @@ function [ M_normalized ] = normalize( M_raw )
   M_normalized = 1/max(max( M_raw )) * M_raw;
 endfunction
 
-%% place an obstacle
-function [ M_ng ] = set_obstacle( M, obs )
-  k_rep = 5;
-  rho_zero = 10;
-  U_rep = 0; U_obs = 0;
-  for yval=1:size(M)(1)
-    for xval=1:size(M)(2)
-      dobs = distance( [yval xval], obs);
-
-      if ( 0 == dobs )
-        U_rep = k_rep;
-      else
-        U_rep = M(yval,xval) + 1/2 * k_rep * ( 1/dobs - 1/rho_zero )^2;
-        if k_rep < U_rep
-          U_rep = k_rep;
-        endif
-      endif
-      M_ng(yval,xval) = U_rep;
-    endfor
-  endfor
-endfunction
-
 %% backtrack for solver
 function [ ret ] = isinbacktrack( backtrack, y, x )
   for( i=1:size(backtrack)(1) )
@@ -191,33 +169,56 @@ endfunction
 
 %% methods
 
+
+%% place an obstacle
+function [ M_ng ] = set_obstacle( M, obs )
+  k_rep = 5;
+  rho_zero = 10;
+  U_rep = 0; U_obs = 0;
+  for yval=1:size(M)(1)
+    for xval=1:size(M)(2)
+      dobs = distance( [yval xval], obs);
+      if ( 0 == dobs )
+        U_rep = k_rep;
+      else
+        U_rep = M(yval,xval) + 1/2 * k_rep * ( 1/dobs - 1/rho_zero )^2;
+        if k_rep < U_rep
+          U_rep = k_rep;
+        endif
+      endif
+      M_ng(yval,xval) = U_rep;
+    endfor
+  endfor
+endfunction
+
 %% repulsive potential field
 function [ M_ng ] = repulsive_potential_field( M )
+  fact=5
   obs1 = [ 26 44; 25 45 ; 26 45; 27 45; 26 46 ];
   M = set_obstacle( M, obs1 );
 
-  obs2 = [ 16 4; 15 5 ; 16 5; 17 5; 16 6 ];
+  obs2 = fact * [ 16 4; 15 5 ; 16 5; 17 5; 16 6 ];
   M = set_obstacle( M, obs2 );
 
-  obs3 = [ 36 4; 35 5 ; 36 5; 37 5; 36 6 ];
+  obs3 = fact * [ 36 4; 35 5 ; 36 5; 37 5; 36 6 ];
   M = set_obstacle( M, obs3 );
 
-  obs4 = [ 6 14; 5 15 ; 6 15; 7 15; 6 16 ];
+  obs4 = fact * [ 6 14; 5 15 ; 6 15; 7 15; 6 16 ];
   M = set_obstacle( M, obs4 );
 
-  obs5 = [ 16 24; 15 25 ; 16 25; 17 25; 16 26 ];
+  obs5 = fact * [ 16 24; 15 25 ; 16 25; 17 25; 16 26 ];
   M = set_obstacle( M, obs5 );
 
-  obs6 = [ 16 54; 15 55 ; 16 55; 17 55; 16 56 ];
+  obs6 = fact * [ 16 54; 15 55 ; 16 55; 17 55; 16 56 ];
   M = set_obstacle( M, obs6 );
 
-  obs7 = [ 36 54; 35 55 ; 36 55; 37 55; 36 56 ];
+  obs7 = fact * [ 36 54; 35 55 ; 36 55; 37 55; 36 56 ];
   M = set_obstacle( M, obs7 );
 
-  obs8 = [ 10 43; 11 42 ; 11 43; 12 44; 11 45 ];
+  obs8 = fact * [ 10 43; 11 42 ; 11 43; 12 44; 11 45 ];
   M = set_obstacle( M, obs8 );
 
-  obs9 = [ 26 22; 25 23 ; 26 23; 27 23; 26 24 ];
+  obs9 = fact * [ 26 22; 25 23 ; 26 23; 27 23; 26 24 ];
   M = set_obstacle( M, obs9 );
 
   M_ng = M;
@@ -248,10 +249,12 @@ endfunction
 
 
 %% set up field
-XMAX=60
-YMAX=40
+%XMAX=60
+%YMAX=40
+XMAX=300
+YMAX=200
 M=zeros(YMAX, XMAX);
-goal = [ 40 60 ];
+goal = [ YMAX XMAX ];
 start = [ 1 1 ];
 ty = [1:size(M)(1)];
 tx = [1:size(M)(2)];
@@ -276,7 +279,7 @@ mesh( tx, ty, M );
 title("Path towards goal\n");
 hold on
 solution = solve( M, start, goal );
-plot3( solution(:,2), solution(:,1), solution(:,3)+0.1, "r*" );
+plot3( solution(:,2), solution(:,1), solution(:,3)+0.1, "r." );
 hold off
 
 printf( "READY.\n" );
