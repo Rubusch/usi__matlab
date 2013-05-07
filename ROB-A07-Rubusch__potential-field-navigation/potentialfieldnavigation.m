@@ -5,7 +5,6 @@ printf( "ASSIGNMENT07 - Robotics\n" );
 printf( "Lothar Rubusch\n" );
 printf( "2013-Apr-29\n\n" );
 
-
 % cleanup
 clear; clc; close all;
 
