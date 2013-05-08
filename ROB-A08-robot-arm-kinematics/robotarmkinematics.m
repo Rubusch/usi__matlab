@@ -53,4 +53,3 @@ kinematics( thetas );
 
 printf( "\nREADY.\n\n" );
 
-
